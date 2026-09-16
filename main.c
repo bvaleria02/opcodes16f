@@ -42,7 +42,40 @@ int main(const int argc, const char **argv){
   printf("Code: %u\n", code);
     */
 
-  op_decode_print_array(instructions, main_bin_len / 2);
+  op_enriched_instruction_config_t config = {
+    .showAddress = true,
+    .showDescription = true,
+    .showName = true,
+    .showFlagname = true,
+    .showValue = true,
+    .configB = {
+      .showName = true,
+      .showValue = true,
+      .showRegname = true,
+    },
+    .configD = {
+      .showName = true,
+      .showValue = true,
+      .showRegname = true,
+    },
+    .configW = {
+      .showName = true,
+      .showValue = true,
+      .showRegname = true,
+    },
+    .configK = {
+      .showName = true,
+      .showValue = true,
+      .showRegname = true,
+    },
+    .configF = {
+      .showName = true,
+      .showValue = true,
+      .showRegname = true,
+    },
+  };
+
+  op_enrich_decode_print_array(instructions, main_bin_len / 2, &config, 0xFBA);
     
   (void) argc;
   (void) argv;

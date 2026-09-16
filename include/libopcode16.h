@@ -1,6 +1,7 @@
 #ifndef LIB_OP_CODE_16_H
 #define LIB_OP_CODE_16_H
 
+#include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -23,11 +24,11 @@ typedef enum {
 typedef enum {
   OP_REGISTER_NONE = 0,
   OP_REGISTER_W = 1,
-  OP_REGISTER_Z = 2,
-  OP_REGISTER_F = 3,
-  OP_REGISTER_D = 4,
-  OP_REGISTER_B = 5,
-  OP_REGISTER_K = 6
+  OP_REGISTER_F = 2,
+  OP_REGISTER_D = 3,
+  OP_REGISTER_B = 4,
+  OP_REGISTER_K = 5,
+  OP_REGISTER_Z = 6
 } op_register_t;
 
 typedef enum {
@@ -83,6 +84,47 @@ typedef struct {
   op_register_bit_t bits[8];
 } op_register_file_map_t;
 
+typedef struct {
+  bool active;
+  uint16_t value;
+  const char *name;    // SSPCON2, PORTA, INTCOM, etc OR W, f
+  op_numeric_display_t display;
+} op_enriched_register_t;
+
+typedef struct {
+  bool showRegname;
+  bool showValue;
+  bool showName;
+} op_enriched_register_config_t;
+
+typedef struct {
+  bool showAddress;
+  bool showName;
+  bool showValue;
+  bool showFlagname;
+  bool showDescription;
+  op_enriched_register_config_t configF;
+  op_enriched_register_config_t configW;
+  op_enriched_register_config_t configK;
+  op_enriched_register_config_t configB;
+  op_enriched_register_config_t configD;
+} op_enriched_instruction_config_t;
+
+typedef struct {
+  uint16_t address;
+  uint16_t value;
+  const char *name;
+  const char *description;
+  
+  op_enriched_register_t regF;
+  op_enriched_register_t regW;
+  op_enriched_register_t regK;
+  op_enriched_register_t regD;
+  op_enriched_register_t regB;
+  
+  const char *flag_name; // ADIF, TM0RIF, INTF 
+} op_enriched_instruction_t;
+
 
 #define OP_BANK_COUNT 4
 #define OP_BANK_SIZE 128
@@ -100,5 +142,11 @@ op_error_t op_print_register_result(const op_register_result_t *reg, const op_in
 op_error_t op_print_instruction_result(const op_instruction_result_t *result, const uint8_t bank);
 op_error_t op_clear_instruction_result(op_instruction_result_t *result);
 op_error_t op_decode_print_array(const uint16_t *instruction_array, const size_t length);
+op_error_t op_enrich_register_clear(op_enriched_register_t *reg);
+op_error_t op_enrich_clear(op_enriched_instruction_t *ins);
+op_error_t op_enrich_decode_result(op_enriched_instruction_t *ins, const op_instruction_result_t *result, const uint16_t address, const uint8_t bank);
+op_error_t op_enriched_print_register_stream(const op_enriched_register_t *reg, const op_enriched_register_config_t *config, FILE *stream, const op_register_t regtype);
+op_error_t op_enriched_print_stream(const op_enriched_instruction_t *ins, const op_enriched_instruction_config_t *config, FILE *stream);
+op_error_t op_enrich_decode_print_array(const uint16_t *instruction_array, const size_t length, const op_enriched_instruction_config_t *config, const uint16_t addressStart);
 
 #endif //LIB_OP_CODE_16_H
