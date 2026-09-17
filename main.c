@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "include/libopcode16.h"
+#include "include/libopcodecontext.h"
 
 const unsigned char main_bin[] = {
   0xff, 0xff, 0x83, 0x12, 0x03, 0x13, 0xa0, 0x00, 0x0c, 0x1e, 0xc1, 0x2f,
@@ -20,6 +21,16 @@ const unsigned char main_bin[] = {
 
 const unsigned int main_bin_len = 144;
 
+op_error_t callback_print(op_context_t *ctx, op_enriched_instruction_t *enins, const uint16_t address){
+  fprintf(stdout, "\rC:%zu ", ctx->cycle_count);
+  op_error_t code = op_enriched_print_stream(enins, &(ctx->enrichedConfig), stdout);
+  fprintf(stdout, " | W: %02X", ctx->w);
+  (void)fgetc(stdin);
+  (void) address;
+  return code;
+}
+
+
 int main(const int argc, const char **argv){
   printf("Hola mundo\n");
 
@@ -27,9 +38,10 @@ int main(const int argc, const char **argv){
     printf("\t%s, %s\n", op_instruction_set[i].name, op_instruction_set[i].description);
   }
 
-  uint16_t instructions[main_bin_len / 2];
+  uint16_t instructions[0x2000];
+//  uint16_t instructions[main_bin_len / 2];
   for(size_t i = 0; i < (main_bin_len / 2); i++){
-    instructions[i] = main_bin[2*i] | (((uint16_t)main_bin[2*i + 1]) << 8);
+    instructions[0x7BA + i] = main_bin[2*i] | (((uint16_t)main_bin[2*i + 1]) << 8);
   }
   
 /*  
@@ -75,8 +87,21 @@ int main(const int argc, const char **argv){
     },
   };
 
-  op_enrich_decode_print_array(instructions, main_bin_len / 2, &config, 0xFBA);
-    
+  printf("aaaa\n");
+  instructions[0] = 0x27D5;
+  
+//  op_enrich_decode_print_array(instructions, 0x1000, &config, 0x0);
+
+
+  op_context_t ctx = {0};
+  op_context_init(&ctx, instructions, 0x1000, callback_print, &config);
+
+  ctx.memory[0][0xC] = 0x10;
+
+  for(size_t i = 0; i < 0x1000; i++){
+    op_context_step(&ctx);
+  }
+  
   (void) argc;
   (void) argv;
   return 0;

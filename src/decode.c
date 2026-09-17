@@ -210,8 +210,10 @@ op_error_t op_enrich_clear(op_enriched_instruction_t *ins){
   assert(code == OP_NO_ERROR);
   code = op_enrich_register_clear(&(ins->regK));
   assert(code == OP_NO_ERROR);
-  code = op_enrich_register_clear(&(ins->regB));
+  code = op_enrich_register_clear(&(ins->regD));
   assert(code == OP_NO_ERROR);
+  
+  ins->flag_name = NULL;
   
   return OP_NO_ERROR;
 }

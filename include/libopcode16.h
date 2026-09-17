@@ -9,10 +9,27 @@
 
 #define OP_INSTRUCTION_REGISTER_COUNT 2
 
-typedef enum {
+typedef enum _op_error_t{
   OP_NO_ERROR = 0,
   OP_ERROR_NULLPTR = 1,
+  OP_ERROR_ZERO_LENGTH = 2,
+  OP_ERROR_OVERFLOW = 3,
+  OP_ERROR_OUT_OF_BOUND = 4,
 } op_error_t;
+
+#ifndef op_context_t
+  typedef struct _op_context_t op_context_t;
+#endif
+
+#ifndef op_instruction_result_t
+  typedef struct _op_instruction_result_t op_instruction_result_t;
+#endif
+
+#ifndef op_enriched_instruction_t
+  typedef struct _op_enriched_instruction_t op_enriched_instruction_t;
+#endif
+
+typedef op_error_t (*op_instruction_callback_t)(op_context_t *, op_enriched_instruction_t *);
 
 typedef enum {
   OP_STATUS_NONE,
@@ -55,6 +72,7 @@ typedef struct {
   uint8_t shift;
   uint16_t opcode;
   op_instruction_register_t reg[OP_INSTRUCTION_REGISTER_COUNT];
+  op_instruction_callback_t callback;
 } op_instruction_t;
 
 #define OP_INSTRUCTION_SET_COUNT 35
@@ -66,12 +84,12 @@ typedef struct {
   bool active;
 } op_register_result_t;
 
-typedef struct {
+struct _op_instruction_result_t{
   uint16_t value;
   const op_instruction_t *instruction;
   bool unknown;
   op_register_result_t registers[OP_INSTRUCTION_REGISTER_COUNT];
-} op_instruction_result_t;
+};
 
 typedef struct {
   bool active;
@@ -110,7 +128,7 @@ typedef struct {
   op_enriched_register_config_t configD;
 } op_enriched_instruction_config_t;
 
-typedef struct {
+struct _op_enriched_instruction_t {
   uint16_t address;
   uint16_t value;
   const char *name;
@@ -123,8 +141,19 @@ typedef struct {
   op_enriched_register_t regB;
   
   const char *flag_name; // ADIF, TM0RIF, INTF 
-} op_enriched_instruction_t;
+};
 
+
+#define OP_MEM_INDF   0x0
+#define OP_MEM_TMR0   0x1
+#define OP_MEM_OPTION_REG 0x1
+#define OP_MEM_PCL    0x2
+#define OP_MEM_STATUS 0x3
+#define OP_MEM_FSR    0x4
+#define OP_MEM_PORTB  0x6
+#define OP_MEM_TRISB  0x6
+#define OP_MEM_PCLATH 0xA
+#define OP_MEM_INTCON 0xB
 
 #define OP_BANK_COUNT 4
 #define OP_BANK_SIZE 128
