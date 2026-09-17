@@ -1,8 +1,11 @@
 #include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <stdbool.h>
 #include "include/libopcode16.h"
 #include "include/libopcodecontext.h"
+#include "include/tool.h"
+#include "include/callback.h"
 
 const unsigned char main_bin[] = {
   0xff, 0xff, 0x83, 0x12, 0x03, 0x13, 0xa0, 0x00, 0x0c, 0x1e, 0xc1, 0x2f,
@@ -21,38 +24,160 @@ const unsigned char main_bin[] = {
 
 const unsigned int main_bin_len = 144;
 
-op_error_t callback_print(op_context_t *ctx, op_enriched_instruction_t *enins, const uint16_t address){
-  fprintf(stdout, "\rC:%zu ", ctx->cycle_count);
-  op_error_t code = op_enriched_print_stream(enins, &(ctx->enrichedConfig), stdout);
-  fprintf(stdout, " | W: %02X", ctx->w);
-  (void)fgetc(stdin);
+op_error_t callback_print(op_context_t *ctx, op_enriched_instruction_t *enins, const uint16_t address, void *data){
+  op_tool_config_t *cfg =  (op_tool_config_t *)data;
+  op_error_t code = OP_NO_ERROR;
+
+  if(cfg->print){
+    fprintf(stdout, "C:%zu ", ctx->cycle_count);
+    code = op_enriched_print_stream(enins, &(ctx->enrichedConfig), stdout);
+    if(cfg->print_w) fprintf(stdout, " | W: %02X", ctx->w);
+  }
+  
+  fprintf(stdout, "\n");
   (void) address;
   return code;
 }
 
+op_error_t op_command_parser_handler(op_command_argument_t *args, const size_t minargs, const char *name, const char *help){
+  OP_CHECK_NULLPTR(args);
+
+  op_error_t code = OP_NO_ERROR;
+  
+  code = op_parse_command(args);
+  assert(code == OP_NO_ERROR);
+  if(code != OP_NO_ERROR) goto error;
+
+  assert(args->isValid == true);
+  if(!args->isValid) goto stdin_error;
+
+  assert(args->argc >= minargs);
+  if(args->argc < minargs) goto stdin_error;
+  
+  return OP_NO_ERROR;
+
+stdin_error:
+  code = OP_ERROR_STDIN;
+  goto error;
+error:
+  printf("[Error parsing input commands for \"%s\" %s]\n", (name == NULL) ? "Unknwon" : name, (help == NULL) ? "(No help)" : help);
+  return code;
+}
+
+op_error_t op_command_goto(op_context_t *ctx){
+  OP_CHECK_NULLPTR(ctx);
+
+  op_error_t code = OP_NO_ERROR;
+  
+  op_command_argument_t args = {0};
+  code = op_command_parser_handler(&args, 1, "GOTO", "(G aaaa)");
+  assert(code == OP_NO_ERROR);
+  if(code != OP_NO_ERROR) return code;
+  
+  ctx->pc = args.argv[0] & 0xFFFF;
+  printf("[PC set to 0x%04x]\n", ctx->pc);
+  return OP_NO_ERROR;  
+}
+
+op_error_t op_command_move(op_context_t *ctx){
+  OP_CHECK_NULLPTR(ctx);
+
+  op_error_t code = OP_NO_ERROR;
+  
+  op_command_argument_t args = {0};
+  code = op_command_parser_handler(&args, 3, "MOVE", "(M b aa vv)");
+  assert(code == OP_NO_ERROR);
+  if(code != OP_NO_ERROR) return code;
+  
+  uint8_t bank_value  = args.argv[0] % OP_BANK_COUNT;
+  uint8_t mem_address = args.argv[1] % OP_BANK_SIZE;
+  uint8_t  set_value  = args.argv[2] & 0xFF;
+                  
+  ctx->memory[bank_value][mem_address] = set_value;
+  printf("[Set memory bank:%i address:0x%02X to 0x%02X]\n", bank_value, mem_address, ctx->memory[bank_value][mem_address]);                  
+  return OP_NO_ERROR;  
+}
+
+op_error_t op_command_replace(op_context_t *ctx){
+  OP_CHECK_NULLPTR(ctx);
+
+  op_error_t code = OP_NO_ERROR;
+  
+  op_command_argument_t args = {0};
+  code = op_command_parser_handler(&args, 1, "REPLACE", "(Z iiii)");
+  assert(code == OP_NO_ERROR);
+  if(code != OP_NO_ERROR) return code;
+  
+  uint16_t instruction = args.argv[0] & 0x3FFF;
+  uint16_t pc = (ctx->pc >= OP_INSTRUCTION_MEMORY_SIZE) ? (OP_INSTRUCTION_MEMORY_SIZE - 1) : ctx->pc;
+
+  op_instruction_result_t decoded_instruction = {0};
+  code = op_decode_instruction(instruction, &decoded_instruction);
+  assert(code == OP_NO_ERROR);
+  if(code != OP_NO_ERROR) return code;
+
+  op_enriched_instruction_t enriched = {0};
+  op_enriched_instruction_config_t config = {
+    .showAddress = false,
+    .showDescription = false,
+    .showName = true,
+    .showFlagname = true,
+    .showValue = true,
+    .configB = {
+      .showName = true,
+      .showValue = true,
+      .showRegname = true,
+    },
+    .configD = {
+      .showName = true,
+      .showValue = true,
+      .showRegname = true,
+    },
+    .configW = {
+      .showName = true,
+      .showValue = true,
+      .showRegname = true,
+    },
+    .configK = {
+      .showName = true,
+      .showValue = true,
+      .showRegname = true,
+    },
+    .configF = {
+      .showName = true,
+      .showValue = true,
+      .showRegname = true,
+    },
+  };
+
+  uint8_t bank = 0;
+  code = op_context_fetch_bank(ctx, &bank);
+  assert(code == OP_NO_ERROR);
+  if(code != OP_NO_ERROR) return code;
+
+  code = op_enrich_decode_result(&enriched, &decoded_instruction, pc, bank);
+  assert(code == OP_NO_ERROR);
+  if(code != OP_NO_ERROR) return code;
+  
+  ctx->instruction_memory[pc] = instruction;
+  
+  printf("[Set instruction at address=0x%04X to 0x%04X] ", pc, instruction);
+  code = op_enriched_print_stream(&enriched, &config, stdout);
+  assert(code == OP_NO_ERROR);
+  if(code != OP_NO_ERROR) return code;
+  printf("\n");
+                  
+  return OP_NO_ERROR;  
+}
+
 
 int main(const int argc, const char **argv){
-  printf("Hola mundo\n");
-
-  for(int i = 0; i < OP_INSTRUCTION_SET_COUNT; i++){
-    printf("\t%s, %s\n", op_instruction_set[i].name, op_instruction_set[i].description);
-  }
-
+  op_error_t code = OP_NO_ERROR;
+  
   uint16_t instructions[0x2000];
-//  uint16_t instructions[main_bin_len / 2];
   for(size_t i = 0; i < (main_bin_len / 2); i++){
     instructions[0x7BA + i] = main_bin[2*i] | (((uint16_t)main_bin[2*i + 1]) << 8);
-  }
-  
-/*  
-  op_instruction_result_t result = {0};
-
-  op_error_t code = op_decode_instruction(instruction, &result);
-  printf("Code: %u\n", code);
-  
-  code = op_print_instruction_result(&result);
-  printf("Code: %u\n", code);
-    */
+  } 
 
   op_enriched_instruction_config_t config = {
     .showAddress = true,
@@ -87,23 +212,80 @@ int main(const int argc, const char **argv){
     },
   };
 
-  printf("aaaa\n");
   instructions[0] = 0x27D5;
-  
-//  op_enrich_decode_print_array(instructions, 0x1000, &config, 0x0);
-
 
   op_context_t ctx = {0};
   op_context_init(&ctx, instructions, 0x1000, callback_print, &config);
 
-  ctx.memory[0][0xC] = 0x10;
+  op_tool_config_t cfg = {
+    .print   = true,
+    .print_w = true
+  };
 
-  for(size_t i = 0; i < 0x1000; i++){
-    op_context_step(&ctx);
-  }
+  op_context_set_external(&ctx, &cfg);
+
+  char c = 0;
+  bool simulate = true;
+  printf("[Start simulation. Press H for help]\n>> ");
+  
+  do {
+    c = fgetc(stdin);
+
+    switch(c & 0xDF){
+      case 'L':  for(int i = 0; i < OP_INSTRUCTION_SET_COUNT; i++){
+                     printf("\t%s, %s\n", op_instruction_set[i].name, op_instruction_set[i].description);
+                  }
+                  break;
+      case 'S':   op_context_step(&ctx);
+                  break;
+      case 'P':   cfg.print = !(cfg.print);
+                  printf("[Master print %s]\n", (cfg.print) ? "enabled" : "disabled" );
+                  break;
+      case 'K':   printf("\033[2J");
+                  break;
+      case 'W':   cfg.print_w = !(cfg.print_w);
+                  printf("[Print register W %s]\n", (cfg.print_w) ? "enabled" : "disabled" );
+                  break;
+      case 'Q':   printf("[End simulation]\n");
+                  simulate = false;
+                  break;
+      case 'R':   ctx.pc = 0;
+                  printf("[PC reset (set to 0)]\n");
+                  break;
+      case 'C':   ctx.enrichedConfig.showAddress = !(ctx.enrichedConfig.showAddress);
+                  printf("[Print PC %s]\n", (ctx.enrichedConfig.showAddress) ? "enabled" : "disabled" );
+                  break;
+      case 'V':   ctx.enrichedConfig.showValue = !(ctx.enrichedConfig.showValue);
+                  printf("[Print instruction value %s]\n", (ctx.enrichedConfig.showValue) ? "enabled" : "disabled" );
+                  break;
+      case 'D':   ctx.enrichedConfig.showDescription = !(ctx.enrichedConfig.showDescription);
+                  printf("[Print instruction description %s]\n", (ctx.enrichedConfig.showDescription) ? "enabled" : "disabled" );
+                  break;
+      case 'H':   printf("Help:\n\tL: Print instruction set\n\tK: Clear stdout\n\tS: Step\n\tP: toggle print\n\tW: toggle print W register\n\tC: toggle print PC\n\tV: toggle print instruction data\n\tD: toggle print description\n\tQ: quit\n\tR: reset\n\tH: print help\n\tG aaaa: goto (set pc to aaaa)\n\tM b aa vv: move (set memory bank b, address aa to vv)\n\tZ iiii: replace instruction at PC with iiii\n");
+                  break;
+      case 'G':   code = op_command_goto(&ctx);
+                  printf(">> ");
+                  break;     
+      case 'M':   code = op_command_move(&ctx);
+                  printf(">> ");
+                  break;
+      case 'Z':   code = op_command_replace(&ctx);
+                  printf(">> ");
+                  break;
+      case '\n':  printf(">> ");
+                  break;
+//      case 'V':   code = op_command_view(&ctx, &cfg);
+//                  break;                 
+                  
+    }
+  } while(simulate);
+  
+//  ctx.memory[0][0xC] = 0x10;
+
   
   (void) argc;
   (void) argv;
+  (void) code;
   return 0;
 }
 

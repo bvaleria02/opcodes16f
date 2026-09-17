@@ -101,7 +101,7 @@ op_error_t op_context_step(op_context_t *ctx){
   
   // callback
   if(ctx->callback != NULL){
-    code = ctx->callback(ctx, &(ctx->lastInstruction), original_pc);
+    code = ctx->callback(ctx, &(ctx->lastInstruction), original_pc, ctx->external_data);
     assert(code == OP_NO_ERROR);
     if(code != OP_NO_ERROR) return code;
   }
@@ -147,3 +147,10 @@ op_error_t op_context_reset(op_context_t *ctx){
   return OP_NO_ERROR;
 }
 
+op_error_t op_context_set_external(op_context_t *ctx, void *data){
+  OP_CHECK_NULLPTR(ctx);
+
+  ctx->external_data = data;
+  
+  return OP_NO_ERROR;
+}

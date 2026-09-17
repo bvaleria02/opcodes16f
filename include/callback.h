@@ -45,5 +45,6 @@ op_error_t op_callback_sleep(op_context_t *ctx, op_enriched_instruction_t *res);
 op_error_t op_callback_sublw(op_context_t *ctx, op_enriched_instruction_t *res);
 op_error_t op_callback_xorlw(op_context_t *ctx, op_enriched_instruction_t *res);
 
+op_error_t op_context_fetch_bank(op_context_t *ctx, uint8_t *bank);
 
 #endif //LIB_OP_CODE_CALLBACK_H

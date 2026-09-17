@@ -9,6 +9,7 @@ op_error_t op_decode_instruction(const uint16_t instruction, op_instruction_resu
 
   op_error_t code = op_clear_instruction_result(result);
   assert(code == OP_NO_ERROR);
+  if(code != OP_NO_ERROR) return code;
   
   result->value = instruction;
   
@@ -204,14 +205,19 @@ op_error_t op_enrich_clear(op_enriched_instruction_t *ins){
   
   code = op_enrich_register_clear(&(ins->regB));
   assert(code == OP_NO_ERROR);
+  if(code != OP_NO_ERROR) return code;
   code = op_enrich_register_clear(&(ins->regF));
   assert(code == OP_NO_ERROR);
+  if(code != OP_NO_ERROR) return code;
   code = op_enrich_register_clear(&(ins->regW));
   assert(code == OP_NO_ERROR);
+  if(code != OP_NO_ERROR) return code;
   code = op_enrich_register_clear(&(ins->regK));
   assert(code == OP_NO_ERROR);
+  if(code != OP_NO_ERROR) return code;
   code = op_enrich_register_clear(&(ins->regD));
   assert(code == OP_NO_ERROR);
+  if(code != OP_NO_ERROR) return code;
   
   ins->flag_name = NULL;
   
@@ -225,6 +231,7 @@ op_error_t op_enrich_decode_result(op_enriched_instruction_t *ins, const op_inst
   op_error_t code = OP_NO_ERROR;
   code = op_enrich_clear(ins);
   assert(code == OP_NO_ERROR);
+  if(code != OP_NO_ERROR) return code;
 
   ins->address = address;
   ins->value   = result->value;
@@ -356,32 +363,41 @@ op_error_t op_enriched_print_stream(const op_enriched_instruction_t *ins, const 
   if(ins->regB.active){
     code = op_enriched_print_register_stream(&(ins->regB), &(config->configB), stream, OP_REGISTER_B);
     assert(code == OP_NO_ERROR);
+    if(code != OP_NO_ERROR) return code;
     fprintf(stream, ", ");
   }
   
   if(ins->regD.active){
     code = op_enriched_print_register_stream(&(ins->regD), &(config->configD), stream, OP_REGISTER_D);
     assert(code == OP_NO_ERROR);
+    if(code != OP_NO_ERROR) return code;
     fprintf(stream, ", ");
   }
   
   if(ins->regW.active){
     code = op_enriched_print_register_stream(&(ins->regW), &(config->configW), stream, OP_REGISTER_W);
     assert(code == OP_NO_ERROR);
+    if(code != OP_NO_ERROR) return code;
   }
   
   if(ins->regF.active){
     code = op_enriched_print_register_stream(&(ins->regF), &(config->configF), stream, OP_REGISTER_F);
     assert(code == OP_NO_ERROR);
+    if(code != OP_NO_ERROR) return code;
   }
 
   if(ins->regK.active){
     code = op_enriched_print_register_stream(&(ins->regK), &(config->configK), stream, OP_REGISTER_K);
     assert(code == OP_NO_ERROR);
+    if(code != OP_NO_ERROR) return code;
   }
 
   if((ins->regB.active && ins->regF.active) && config->showFlagname && (ins->flag_name != NULL)){
     fprintf(stream, "(bit:%s) ", ins->flag_name);
+  }
+  
+  if(config->showDescription && (ins->description != NULL)){
+    fprintf(stream, "; \t%s ", ins->description);
   }
 
   return OP_NO_ERROR; 

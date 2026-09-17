@@ -20,7 +20,7 @@
 typedef op_error_t (*op_context_fn_step_t)(op_context_t *);
 typedef op_error_t (*op_context_fn_reset_t)(op_context_t *);
 typedef op_error_t (*op_context_fn_run_t)(op_context_t *);
-typedef op_error_t (*op_context_fn_callback_t)(op_context_t *, op_enriched_instruction_t *ins, const uint16_t address);
+typedef op_error_t (*op_context_fn_callback_t)(op_context_t *, op_enriched_instruction_t *ins, const uint16_t address, void *data);
 
 typedef struct {
   const op_context_fn_step_t step;
@@ -44,6 +44,7 @@ struct _op_context_t {
   op_enriched_instruction_config_t enrichedConfig;
   op_enriched_instruction_t lastInstruction;
   op_context_fn_callback_t callback;
+  void *external_data;
 };
 
 extern op_context_vtable_t op_context_vtable_default;
@@ -52,6 +53,7 @@ op_error_t op_context_init(op_context_t *ctx, uint16_t *instructions, size_t len
 op_error_t op_context_run(op_context_t *ctx);
 op_error_t op_context_step(op_context_t *ctx);
 op_error_t op_context_reset(op_context_t *ctx);
+op_error_t op_context_set_external(op_context_t *ctx, void *data);
 
 
 #endif //LIB_OP_CODE_16_CONTEXT_H

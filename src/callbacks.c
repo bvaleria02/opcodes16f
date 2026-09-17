@@ -262,7 +262,7 @@ op_error_t op_callback_decf(op_context_t *ctx, op_enriched_instruction_t *res){
   if(code != OP_NO_ERROR) return code;
 
   // Execute
-  uint8_t value = mem_value--;
+  uint8_t value = mem_value - 1;
 
   // Store value
   code = op_context_conditional_d_store(ctx, res->regD.value, value, bank, res->regF.value);
@@ -295,7 +295,7 @@ op_error_t op_callback_decfsz(op_context_t *ctx, op_enriched_instruction_t *res)
   if(code != OP_NO_ERROR) return code;
 
   // Execute
-  uint8_t value = mem_value--;
+  uint8_t value = mem_value - 1;
 
   // Store value
   code = op_context_conditional_d_store(ctx, res->regD.value, value, bank, res->regF.value);
@@ -334,7 +334,7 @@ op_error_t op_callback_incf(op_context_t *ctx, op_enriched_instruction_t *res){
   if(code != OP_NO_ERROR) return code;
 
   // Execute
-  uint8_t value = mem_value++;
+  uint8_t value = mem_value + 1;
 
   // Store value
   code = op_context_conditional_d_store(ctx, res->regD.value, value, bank, res->regF.value);
@@ -367,7 +367,7 @@ op_error_t op_callback_incfsz(op_context_t *ctx, op_enriched_instruction_t *res)
   if(code != OP_NO_ERROR) return code;
 
   // Execute
-  uint8_t value = mem_value++;
+  uint8_t value = mem_value + 1;
 
   // Store value
   code = op_context_conditional_d_store(ctx, res->regD.value, value, bank, res->regF.value);
@@ -518,7 +518,8 @@ op_error_t op_callback_rlf(op_context_t *ctx, op_enriched_instruction_t *res){
   // Execute
   uint8_t msb = mem_value & 0x80;
   msb = msb >> 0x7;
-  uint8_t value = (mem_value >> 1) | msb;
+  uint8_t c = ctx->memory[0][OP_MEM_STATUS] & 0x1;
+  uint8_t value = (mem_value >> 1) | c;
 
   uint8_t status = 0;
   code = op_context_fetch_memory(ctx, 0, OP_MEM_STATUS, &status);
@@ -564,7 +565,8 @@ op_error_t op_callback_rrf(op_context_t *ctx, op_enriched_instruction_t *res){
 
   // Execute
   uint8_t lsb = mem_value & 0x1;
-  uint8_t value = (mem_value >> 1) | (lsb << 7);
+  uint8_t c = ctx->memory[0][OP_MEM_STATUS] & 0x1;
+  uint8_t value = (mem_value >> 1) | (c << 7);
 
   uint8_t status = 0;
   code = op_context_fetch_memory(ctx, 0, OP_MEM_STATUS, &status);
@@ -1047,7 +1049,7 @@ op_error_t op_callback_sublw(op_context_t *ctx, op_enriched_instruction_t *res){
   OP_CHECK_NULLPTR(ctx);
   OP_CHECK_NULLPTR(res);
 
-  ctx->w = ctx->w - res->regK.value;
+  ctx->w = res->regK.value - ctx->w;
 
   ctx->pc += 1;
   ctx->wait_cycles = 0;

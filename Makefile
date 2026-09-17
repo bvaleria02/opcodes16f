@@ -8,3 +8,7 @@ LINK=-lm
 all:
 	$(CC) $(FLAGS) -I$(INCLUDE) $(SRCS) -o $(TARGET) $(LINKS)
 	./$(TARGET)
+	
+prod:
+	$(CC) $(FLAGS) -I$(INCLUDE) $(SRCS) -o $(TARGET) $(LINKS) -DNDEBUG
+	./$(TARGET)

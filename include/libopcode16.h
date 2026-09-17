@@ -15,6 +15,7 @@ typedef enum _op_error_t{
   OP_ERROR_ZERO_LENGTH = 2,
   OP_ERROR_OVERFLOW = 3,
   OP_ERROR_OUT_OF_BOUND = 4,
+  OP_ERROR_STDIN = 5,
 } op_error_t;
 
 #ifndef op_context_t
