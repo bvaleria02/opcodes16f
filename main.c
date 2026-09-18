@@ -32,6 +32,15 @@ op_error_t callback_print(op_context_t *ctx, op_enriched_instruction_t *enins, c
     fprintf(stdout, "C:%zu ", ctx->cycle_count);
     code = op_enriched_print_stream(enins, &(ctx->enrichedConfig), stdout);
     if(cfg->print_w) fprintf(stdout, " | W: %02X", ctx->w);
+
+    for(size_t i = 0; i < OP_MAX_VARIABLE_COUNT; i++){
+      if(!cfg->variables[i].active) continue;
+
+      uint8_t mem_value = 0;
+      code = op_context_fetch_memory(ctx, cfg->variables[i].bank, cfg->variables[i].address, &mem_value);
+
+      printf("\n\tMemory at bank %01X, address %02X: %02X", cfg->variables[i].bank, cfg->variables[i].address, mem_value);
+    }
   }
   
   fprintf(stdout, "\n");
@@ -170,6 +179,91 @@ op_error_t op_command_replace(op_context_t *ctx){
   return OP_NO_ERROR;  
 }
 
+op_error_t op_command_add_watch_variable(op_context_t *ctx, op_tool_config_t *cfg){
+  OP_CHECK_NULLPTR(ctx);
+  OP_CHECK_NULLPTR(cfg);
+
+  op_error_t code = OP_NO_ERROR;
+  
+  op_command_argument_t args = {0};
+  code = op_command_parser_handler(&args, 2, "ADD WATCH", "(I b aa)");
+  assert(code == OP_NO_ERROR);
+  if(code != OP_NO_ERROR) return code;
+  
+  uint8_t bank_value  = args.argv[0] % OP_BANK_COUNT;
+  uint8_t mem_address = args.argv[1] % OP_BANK_SIZE;
+                  
+  code = op_tool_insert_variable(cfg, bank_value, mem_address);
+  assert(code == OP_NO_ERROR);
+  if(code != OP_NO_ERROR){
+    printf("[Error adding variable watcher (code: %u)]\n", code);
+    return code; 
+  }
+  
+  printf("[Enabled memory watcher for bank:%i address:0x%02X]\n", bank_value, mem_address);                  
+  return OP_NO_ERROR;  
+}
+
+op_error_t op_command_remove_watch_variable(op_context_t *ctx, op_tool_config_t *cfg){
+  OP_CHECK_NULLPTR(ctx);
+  OP_CHECK_NULLPTR(cfg);
+
+  op_error_t code = OP_NO_ERROR;
+  
+  op_command_argument_t args = {0};
+  code = op_command_parser_handler(&args, 2, "ADD WATCH", "(I b aa)");
+  assert(code == OP_NO_ERROR);
+  if(code != OP_NO_ERROR) return code;
+  
+  uint8_t bank_value  = args.argv[0] % OP_BANK_COUNT;
+  uint8_t mem_address = args.argv[1] % OP_BANK_SIZE;
+                  
+  code = op_tool_remove_variable(cfg, bank_value, mem_address);
+  assert(code == OP_NO_ERROR);
+  if(code != OP_NO_ERROR){
+    printf("[Error removing variable watcher (code: %u)]\n", code);
+    return code; 
+  }
+  
+  printf("[Disabled memory watcher for bank:%i address:0x%02X]\n", bank_value, mem_address);                  
+  return OP_NO_ERROR;  
+}
+
+op_error_t op_hex_print_stream(const uint8_t *mem, const size_t length, FILE *stream ){
+  OP_CHECK_NULLPTR(mem);
+  OP_CHECK_NULLPTR(stream);
+
+  fprintf(stream, "Address  | 00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F |                 \n");
+  fprintf(stream, "----------------------------------------------------------------------------\n");
+
+  for(size_t i = 0; i < length; i++){
+    if((i % 0x10) == 0) fprintf(stream, "%08lX |", i);
+    fprintf(stream, " %02X", mem[i]);
+    if((i % 0x10) == 0xF) fprintf(stream, " | \n");
+  }
+  fprintf(stream, "\n");
+    
+  return OP_NO_ERROR;
+}
+
+op_error_t op_command_hex_dump(op_context_t *ctx){
+  OP_CHECK_NULLPTR(ctx);
+
+  op_error_t code = OP_NO_ERROR;
+  
+  printf("[Memory hex dump]\n");
+  for(size_t i = 0; i < OP_BANK_COUNT; i++){
+    printf("Bank %zu:\n", i);
+    code = op_hex_print_stream(ctx->memory[i], OP_BANK_SIZE, stdout);
+    assert(code == OP_NO_ERROR);
+    if(code != OP_NO_ERROR) goto error;
+  }
+  
+  return OP_NO_ERROR;
+error:
+  printf("[Error printing hex view of memory (code: %u)]\n", code);
+  return code;
+}
 
 int main(const int argc, const char **argv){
   op_error_t code = OP_NO_ERROR;
@@ -271,6 +365,18 @@ int main(const int argc, const char **argv){
                   break;
       case 'Z':   code = op_command_replace(&ctx);
                   printf(">> ");
+                  break;
+      case 'I':   code = op_command_add_watch_variable(&ctx, &cfg);
+                  printf(">> ");
+                  break;
+      case 'O':   code = op_command_remove_watch_variable(&ctx, &cfg);
+                  printf(">> ");
+                  break;
+      case 'N':   code = op_command_hex_dump(&ctx);
+                  printf(">> ");
+                  break;
+      case 'U':   for(size_t i = 0; i < OP_MAX_VARIABLE_COUNT; i++) cfg.variables[i].active = false;
+                  printf("[All watch variables disabled]\n");
                   break;
       case '\n':  printf(">> ");
                   break;

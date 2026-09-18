@@ -89,7 +89,10 @@ op_error_t op_context_conditional_d_store(op_context_t *ctx, const bool d, uint8
 
   op_error_t code = OP_NO_ERROR;
   
+  printf("D: %i\n", d);
+  
   if(d){
+    printf("Store in memory\n");
     code = op_context_store_memory(ctx, bank, address, value);
     assert(code == OP_NO_ERROR);
     if(code != OP_NO_ERROR) return code;
@@ -464,18 +467,12 @@ op_error_t op_callback_movwf(op_context_t *ctx, op_enriched_instruction_t *res){
   code = op_context_fetch_bank(ctx, &bank);
   assert(code == OP_NO_ERROR);
   if(code != OP_NO_ERROR) return code;
-
-  // Fetch value from memory
-  uint8_t mem_value = 0;
-  code = op_context_fetch_memory(ctx, bank, res->regF.value, &mem_value);
-  assert(code == OP_NO_ERROR);
-  if(code != OP_NO_ERROR) return code;
-
+  
   // Execute
   uint8_t value = ctx->w;
 
   // Store value
-  code = op_context_conditional_d_store(ctx, res->regD.value, value, bank, res->regF.value);
+  code = op_context_store_memory(ctx, bank, res->regF.value, value);
   assert(code == OP_NO_ERROR);
   if(code != OP_NO_ERROR) return code;
 

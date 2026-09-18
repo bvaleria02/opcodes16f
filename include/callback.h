@@ -46,5 +46,8 @@ op_error_t op_callback_sublw(op_context_t *ctx, op_enriched_instruction_t *res);
 op_error_t op_callback_xorlw(op_context_t *ctx, op_enriched_instruction_t *res);
 
 op_error_t op_context_fetch_bank(op_context_t *ctx, uint8_t *bank);
+op_error_t op_context_fetch_memory(op_context_t *ctx, const uint8_t bank, const uint8_t address, uint8_t *value);
+op_error_t op_context_store_memory(op_context_t *ctx, const uint8_t bank, const uint8_t address, uint8_t value);
+op_error_t op_context_conditional_d_store(op_context_t *ctx, const bool d, uint8_t value, const uint8_t bank, const uint8_t address);
 
 #endif //LIB_OP_CODE_CALLBACK_H
