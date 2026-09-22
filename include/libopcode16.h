@@ -16,6 +16,12 @@ typedef enum _op_error_t{
   OP_ERROR_OVERFLOW = 3,
   OP_ERROR_OUT_OF_BOUND = 4,
   OP_ERROR_STDIN = 5,
+  OP_ERROR_FOPEN = 6,
+  OP_ERROR_FGETS = 7,
+  OP_ERROR_FWRITE = 8,
+  OP_ERROR_MALLOC = 9,
+  OP_ERROR_COPY = 10,
+  OP_ERROR_FSEEK = 11,
 } op_error_t;
 
 #ifndef op_context_t
@@ -56,6 +62,44 @@ typedef enum {
   OP_NUMERIC_DISPLAY_DEC8  = 3
 } op_numeric_display_t;
 
+typedef enum {
+  OP_INSTRUCTION_ADDWF,
+  OP_INSTRUCTION_ANDWF,
+  OP_INSTRUCTION_CLRF,
+  OP_INSTRUCTION_CLRW,
+  OP_INSTRUCTION_COMF,
+  OP_INSTRUCTION_DECF,
+  OP_INSTRUCTION_DECFSZ,
+  OP_INSTRUCTION_INCF,
+  OP_INSTRUCTION_INCFSZ,
+  OP_INSTRUCTION_IORWF,
+  OP_INSTRUCTION_MOVF,
+  OP_INSTRUCTION_MOVWF,
+  OP_INSTRUCTION_NOP,
+  OP_INSTRUCTION_RLF,
+  OP_INSTRUCTION_RRF,
+  OP_INSTRUCTION_SUBWF,
+  OP_INSTRUCTION_SWAPF,
+  OP_INSTRUCTION_XORWF,
+  OP_INSTRUCTION_BCF,
+  OP_INSTRUCTION_BSF,
+  OP_INSTRUCTION_BTFSC,
+  OP_INSTRUCTION_BTFSS,
+  OP_INSTRUCTION_ADDLW,
+  OP_INSTRUCTION_ANDLW,
+  OP_INSTRUCTION_CALL,
+  OP_INSTRUCTION_CLRWDT,
+  OP_INSTRUCTION_GOTO,
+  OP_INSTRUCTION_IORLW,
+  OP_INSTRUCTION_MOVLW,
+  OP_INSTRUCTION_RETFIE,
+  OP_INSTRUCTION_RETLW,
+  OP_INSTRUCTION_RETURN,
+  OP_INSTRUCTION_SLEEP,
+  OP_INSTRUCTION_SUBLW,
+  OP_INSTRUCTION_XORLW
+} op_instruction_type_t;
+
 typedef struct {
   bool active;
   uint16_t mask;
@@ -72,6 +116,7 @@ typedef struct {
   uint16_t mask;
   uint8_t shift;
   uint16_t opcode;
+  op_instruction_type_t type;
   op_instruction_register_t reg[OP_INSTRUCTION_REGISTER_COUNT];
   op_instruction_callback_t callback;
 } op_instruction_t;
@@ -159,7 +204,6 @@ struct _op_enriched_instruction_t {
 #define OP_BANK_COUNT 4
 #define OP_BANK_SIZE 128
 extern const op_register_file_map_t op_registers_file_map[OP_BANK_COUNT][OP_BANK_SIZE];
-
 #define OP_CHECK_NULLPTR(__ptr) do{ \
   assert((__ptr) != NULL);          \
     if((__ptr) == NULL){            \

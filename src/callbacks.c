@@ -89,10 +89,7 @@ op_error_t op_context_conditional_d_store(op_context_t *ctx, const bool d, uint8
 
   op_error_t code = OP_NO_ERROR;
   
-  printf("D: %i\n", d);
-  
   if(d){
-    printf("Store in memory\n");
     code = op_context_store_memory(ctx, bank, address, value);
     assert(code == OP_NO_ERROR);
     if(code != OP_NO_ERROR) return code;

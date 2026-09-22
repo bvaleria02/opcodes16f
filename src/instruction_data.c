@@ -13,6 +13,7 @@ const op_instruction_t op_instruction_set[OP_INSTRUCTION_SET_COUNT] = {
     .shift           = 8,
     .opcode          = 0x7,
     .callback        = op_callback_addwf,
+    .type            = OP_INSTRUCTION_ADDWF,
     .reg = {
       {
         .active = true,
@@ -39,6 +40,7 @@ const op_instruction_t op_instruction_set[OP_INSTRUCTION_SET_COUNT] = {
     .shift           = 8,
     .opcode          = 0x5,
     .callback        = op_callback_andwf,
+    .type            = OP_INSTRUCTION_ANDWF,
     .reg = {
       {
         .active = true,
@@ -65,6 +67,7 @@ const op_instruction_t op_instruction_set[OP_INSTRUCTION_SET_COUNT] = {
     .shift           = 7,
     .opcode          = 0x3,
     .callback        = op_callback_clrf,
+    .type            = OP_INSTRUCTION_CLRF,
     .reg = {
       {
         .active = true,
@@ -90,6 +93,7 @@ const op_instruction_t op_instruction_set[OP_INSTRUCTION_SET_COUNT] = {
     .shift           = 7,
     .opcode          = 0x2,
     .callback        = op_callback_clrw,
+    .type            = OP_INSTRUCTION_CLRW,
     .reg = {
       {
         .active = false,
@@ -114,6 +118,7 @@ const op_instruction_t op_instruction_set[OP_INSTRUCTION_SET_COUNT] = {
     .shift           = 8,
     .opcode          = 0x9,
     .callback        = op_callback_comf,
+    .type            = OP_INSTRUCTION_COMF,
     .reg = {
       {
         .active = true,
@@ -140,6 +145,7 @@ const op_instruction_t op_instruction_set[OP_INSTRUCTION_SET_COUNT] = {
     .shift           = 8,
     .opcode          = 0x3,
     .callback        = op_callback_decf,
+    .type            = OP_INSTRUCTION_DECF,
     .reg = {
       {
         .active = true,
@@ -166,6 +172,7 @@ const op_instruction_t op_instruction_set[OP_INSTRUCTION_SET_COUNT] = {
     .shift           = 8,
     .opcode          = 0xB,
     .callback        = op_callback_decfsz,
+    .type            = OP_INSTRUCTION_DECFSZ,
     .reg = {
       {
         .active = true,
@@ -192,6 +199,7 @@ const op_instruction_t op_instruction_set[OP_INSTRUCTION_SET_COUNT] = {
     .shift           = 8,
     .opcode          = 0xA,
     .callback        = op_callback_incf,
+    .type            = OP_INSTRUCTION_INCF,
     .reg = {
       {
         .active = true,
@@ -218,6 +226,7 @@ const op_instruction_t op_instruction_set[OP_INSTRUCTION_SET_COUNT] = {
     .shift           = 8,
     .opcode          = 0xF,
     .callback        = op_callback_incfsz,
+    .type            = OP_INSTRUCTION_INCFSZ,
     .reg = {
       {
         .active = true,
@@ -244,6 +253,7 @@ const op_instruction_t op_instruction_set[OP_INSTRUCTION_SET_COUNT] = {
     .shift           = 8,
     .opcode          = 0x4,
     .callback        = op_callback_iorwf,
+    .type            = OP_INSTRUCTION_IORWF,
     .reg = {
       {
         .active = true,
@@ -270,6 +280,7 @@ const op_instruction_t op_instruction_set[OP_INSTRUCTION_SET_COUNT] = {
     .shift           = 8,
     .opcode          = 0x8,
     .callback        = op_callback_movf,
+    .type            = OP_INSTRUCTION_MOVF,
     .reg = {
       {
         .active = true,
@@ -296,6 +307,7 @@ const op_instruction_t op_instruction_set[OP_INSTRUCTION_SET_COUNT] = {
     .shift           = 7,
     .opcode          = 0x1,
     .callback        = op_callback_movwf,
+    .type            = OP_INSTRUCTION_MOVWF,
     .reg = {
       {
         .active = true,
@@ -321,6 +333,7 @@ const op_instruction_t op_instruction_set[OP_INSTRUCTION_SET_COUNT] = {
     .shift           = 0,
     .opcode          = 0x0,
     .callback        = op_callback_nop,
+    .type            = OP_INSTRUCTION_NOP,
     .reg = {
       {
         .active = false,
@@ -345,6 +358,7 @@ const op_instruction_t op_instruction_set[OP_INSTRUCTION_SET_COUNT] = {
     .shift           = 8,
     .opcode          = 0xD,
     .callback        = op_callback_rlf,
+    .type            = OP_INSTRUCTION_RLF,
     .reg = {
       {
         .active = true,
@@ -370,6 +384,7 @@ const op_instruction_t op_instruction_set[OP_INSTRUCTION_SET_COUNT] = {
     .shift           = 8,
     .opcode          = 0xC,
     .callback        = op_callback_rrf,
+    .type            = OP_INSTRUCTION_RRF,
     .reg = {
       {
         .active = true,
@@ -395,6 +410,7 @@ const op_instruction_t op_instruction_set[OP_INSTRUCTION_SET_COUNT] = {
     .shift           = 8,
     .opcode          = 0x2,
     .callback        = op_callback_subwf,
+    .type            = OP_INSTRUCTION_SUBWF,
     .reg = {
       {
         .active = true,
@@ -421,6 +437,7 @@ const op_instruction_t op_instruction_set[OP_INSTRUCTION_SET_COUNT] = {
     .shift           = 8,
     .opcode          = 0xE,
     .callback        = op_callback_swapf,
+    .type            = OP_INSTRUCTION_SWAPF,
     .reg = {
       {
         .active = true,
@@ -447,6 +464,7 @@ const op_instruction_t op_instruction_set[OP_INSTRUCTION_SET_COUNT] = {
     .shift           = 8,
     .opcode          = 0x6,
     .callback        = op_callback_xorwf,
+    .type            = OP_INSTRUCTION_XORWF,
     .reg = {
       {
         .active = true,
@@ -473,6 +491,7 @@ const op_instruction_t op_instruction_set[OP_INSTRUCTION_SET_COUNT] = {
     .shift           = 10,
     .opcode          = 0x4,
     .callback        = op_callback_bcf,
+    .type            = OP_INSTRUCTION_BCF,
     .reg = {
       {
         .active = true,
@@ -499,6 +518,7 @@ const op_instruction_t op_instruction_set[OP_INSTRUCTION_SET_COUNT] = {
     .shift           = 10,
     .opcode          = 0x5,
     .callback        = op_callback_bsf,
+    .type            = OP_INSTRUCTION_BSF,
     .reg = {
       {
         .active = true,
@@ -525,6 +545,7 @@ const op_instruction_t op_instruction_set[OP_INSTRUCTION_SET_COUNT] = {
     .shift           = 10,
     .opcode          = 0x6,
     .callback        = op_callback_btfsc,
+    .type            = OP_INSTRUCTION_BTFSC,
     .reg = {
       {
         .active = true,
@@ -551,6 +572,7 @@ const op_instruction_t op_instruction_set[OP_INSTRUCTION_SET_COUNT] = {
     .shift           = 10,
     .opcode          = 0x7,
     .callback        = op_callback_btfss,
+    .type            = OP_INSTRUCTION_BTFSS,
     .reg = {
       {
         .active = true,
@@ -577,6 +599,7 @@ const op_instruction_t op_instruction_set[OP_INSTRUCTION_SET_COUNT] = {
     .shift           = 9,
     .opcode          = 0x1F,
     .callback        = op_callback_addlw,
+    .type            = OP_INSTRUCTION_ADDLW,
     .reg = {
       {
         .active = true,
@@ -602,6 +625,7 @@ const op_instruction_t op_instruction_set[OP_INSTRUCTION_SET_COUNT] = {
     .shift           = 8,
     .opcode          = 0x39,
     .callback        = op_callback_andlw,
+    .type            = OP_INSTRUCTION_ANDLW,
     .reg = {
       {
         .active = true,
@@ -627,6 +651,7 @@ const op_instruction_t op_instruction_set[OP_INSTRUCTION_SET_COUNT] = {
     .shift           = 11,
     .opcode          = 0x4,
     .callback        = op_callback_call,
+    .type            = OP_INSTRUCTION_CALL,
     .reg = {
       {
         .active = true,
@@ -652,6 +677,7 @@ const op_instruction_t op_instruction_set[OP_INSTRUCTION_SET_COUNT] = {
     .shift           = 0,
     .opcode          = 0x64,
     .callback        = op_callback_clrwdt,
+    .type            = OP_INSTRUCTION_CLRWDT,
     .reg = {
       {
         .active = false,
@@ -676,6 +702,7 @@ const op_instruction_t op_instruction_set[OP_INSTRUCTION_SET_COUNT] = {
     .shift           = 11,
     .opcode          = 0x5,
     .callback        = op_callback_goto,
+    .type            = OP_INSTRUCTION_GOTO,
     .reg = {
       {
         .active = true,
@@ -701,6 +728,7 @@ const op_instruction_t op_instruction_set[OP_INSTRUCTION_SET_COUNT] = {
     .shift           = 8,
     .opcode          = 0x38,
     .callback        = op_callback_iorlw,
+    .type            = OP_INSTRUCTION_IORLW,
     .reg = {
       {
         .active = true,
@@ -726,6 +754,7 @@ const op_instruction_t op_instruction_set[OP_INSTRUCTION_SET_COUNT] = {
     .shift           = 10,
     .opcode          = 0xC,
     .callback        = op_callback_movlw,
+    .type            = OP_INSTRUCTION_MOVLW,
     .reg = {
       {
         .active = true,
@@ -751,6 +780,7 @@ const op_instruction_t op_instruction_set[OP_INSTRUCTION_SET_COUNT] = {
     .shift           = 0,
     .opcode          = 0x9,
     .callback        = op_callback_retfie,
+    .type            = OP_INSTRUCTION_RETFIE,
     .reg = {
       {
         .active = false,
@@ -775,6 +805,7 @@ const op_instruction_t op_instruction_set[OP_INSTRUCTION_SET_COUNT] = {
     .shift           = 10,
     .opcode          = 0xD,
     .callback        = op_callback_retlw,
+    .type            = OP_INSTRUCTION_RETLW,
     .reg = {
       {
         .active = true,
@@ -800,6 +831,7 @@ const op_instruction_t op_instruction_set[OP_INSTRUCTION_SET_COUNT] = {
     .shift           = 0,
     .opcode          = 0x8,
     .callback        = op_callback_return,
+    .type            = OP_INSTRUCTION_RETURN,
     .reg = {
       {
         .active = false,
@@ -824,6 +856,7 @@ const op_instruction_t op_instruction_set[OP_INSTRUCTION_SET_COUNT] = {
     .shift           = 0,
     .opcode          = 0x63,
     .callback        = op_callback_sleep,
+    .type            = OP_INSTRUCTION_SLEEP,
     .reg = {
       {
         .active = false,
@@ -848,6 +881,7 @@ const op_instruction_t op_instruction_set[OP_INSTRUCTION_SET_COUNT] = {
     .shift           = 9,
     .opcode          = 0x1E,
     .callback        = op_callback_sublw,
+    .type            = OP_INSTRUCTION_SUBLW,
     .reg = {
       {
         .active = true,
@@ -873,6 +907,7 @@ const op_instruction_t op_instruction_set[OP_INSTRUCTION_SET_COUNT] = {
     .shift           = 8,
     .opcode          = 0x3A,
     .callback        = op_callback_xorlw,
+    .type            = OP_INSTRUCTION_XORLW,
     .reg = {
       {
         .active = true,

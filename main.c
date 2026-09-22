@@ -2,10 +2,15 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <stddef.h>
+#include <linux/limits.h>
 #include "include/libopcode16.h"
 #include "include/libopcodecontext.h"
 #include "include/tool.h"
 #include "include/callback.h"
+#include "include/checked_math.h"
+#include "include/repl.h"
+
 
 const unsigned char main_bin[] = {
   0xff, 0xff, 0x83, 0x12, 0x03, 0x13, 0xa0, 0x00, 0x0c, 0x1e, 0xc1, 0x2f,
@@ -48,222 +53,6 @@ op_error_t callback_print(op_context_t *ctx, op_enriched_instruction_t *enins, c
   return code;
 }
 
-op_error_t op_command_parser_handler(op_command_argument_t *args, const size_t minargs, const char *name, const char *help){
-  OP_CHECK_NULLPTR(args);
-
-  op_error_t code = OP_NO_ERROR;
-  
-  code = op_parse_command(args);
-  assert(code == OP_NO_ERROR);
-  if(code != OP_NO_ERROR) goto error;
-
-  assert(args->isValid == true);
-  if(!args->isValid) goto stdin_error;
-
-  assert(args->argc >= minargs);
-  if(args->argc < minargs) goto stdin_error;
-  
-  return OP_NO_ERROR;
-
-stdin_error:
-  code = OP_ERROR_STDIN;
-  goto error;
-error:
-  printf("[Error parsing input commands for \"%s\" %s]\n", (name == NULL) ? "Unknwon" : name, (help == NULL) ? "(No help)" : help);
-  return code;
-}
-
-op_error_t op_command_goto(op_context_t *ctx){
-  OP_CHECK_NULLPTR(ctx);
-
-  op_error_t code = OP_NO_ERROR;
-  
-  op_command_argument_t args = {0};
-  code = op_command_parser_handler(&args, 1, "GOTO", "(G aaaa)");
-  assert(code == OP_NO_ERROR);
-  if(code != OP_NO_ERROR) return code;
-  
-  ctx->pc = args.argv[0] & 0xFFFF;
-  printf("[PC set to 0x%04x]\n", ctx->pc);
-  return OP_NO_ERROR;  
-}
-
-op_error_t op_command_move(op_context_t *ctx){
-  OP_CHECK_NULLPTR(ctx);
-
-  op_error_t code = OP_NO_ERROR;
-  
-  op_command_argument_t args = {0};
-  code = op_command_parser_handler(&args, 3, "MOVE", "(M b aa vv)");
-  assert(code == OP_NO_ERROR);
-  if(code != OP_NO_ERROR) return code;
-  
-  uint8_t bank_value  = args.argv[0] % OP_BANK_COUNT;
-  uint8_t mem_address = args.argv[1] % OP_BANK_SIZE;
-  uint8_t  set_value  = args.argv[2] & 0xFF;
-                  
-  ctx->memory[bank_value][mem_address] = set_value;
-  printf("[Set memory bank:%i address:0x%02X to 0x%02X]\n", bank_value, mem_address, ctx->memory[bank_value][mem_address]);                  
-  return OP_NO_ERROR;  
-}
-
-op_error_t op_command_replace(op_context_t *ctx){
-  OP_CHECK_NULLPTR(ctx);
-
-  op_error_t code = OP_NO_ERROR;
-  
-  op_command_argument_t args = {0};
-  code = op_command_parser_handler(&args, 1, "REPLACE", "(Z iiii)");
-  assert(code == OP_NO_ERROR);
-  if(code != OP_NO_ERROR) return code;
-  
-  uint16_t instruction = args.argv[0] & 0x3FFF;
-  uint16_t pc = (ctx->pc >= OP_INSTRUCTION_MEMORY_SIZE) ? (OP_INSTRUCTION_MEMORY_SIZE - 1) : ctx->pc;
-
-  op_instruction_result_t decoded_instruction = {0};
-  code = op_decode_instruction(instruction, &decoded_instruction);
-  assert(code == OP_NO_ERROR);
-  if(code != OP_NO_ERROR) return code;
-
-  op_enriched_instruction_t enriched = {0};
-  op_enriched_instruction_config_t config = {
-    .showAddress = false,
-    .showDescription = false,
-    .showName = true,
-    .showFlagname = true,
-    .showValue = true,
-    .configB = {
-      .showName = true,
-      .showValue = true,
-      .showRegname = true,
-    },
-    .configD = {
-      .showName = true,
-      .showValue = true,
-      .showRegname = true,
-    },
-    .configW = {
-      .showName = true,
-      .showValue = true,
-      .showRegname = true,
-    },
-    .configK = {
-      .showName = true,
-      .showValue = true,
-      .showRegname = true,
-    },
-    .configF = {
-      .showName = true,
-      .showValue = true,
-      .showRegname = true,
-    },
-  };
-
-  uint8_t bank = 0;
-  code = op_context_fetch_bank(ctx, &bank);
-  assert(code == OP_NO_ERROR);
-  if(code != OP_NO_ERROR) return code;
-
-  code = op_enrich_decode_result(&enriched, &decoded_instruction, pc, bank);
-  assert(code == OP_NO_ERROR);
-  if(code != OP_NO_ERROR) return code;
-  
-  ctx->instruction_memory[pc] = instruction;
-  
-  printf("[Set instruction at address=0x%04X to 0x%04X] ", pc, instruction);
-  code = op_enriched_print_stream(&enriched, &config, stdout);
-  assert(code == OP_NO_ERROR);
-  if(code != OP_NO_ERROR) return code;
-  printf("\n");
-                  
-  return OP_NO_ERROR;  
-}
-
-op_error_t op_command_add_watch_variable(op_context_t *ctx, op_tool_config_t *cfg){
-  OP_CHECK_NULLPTR(ctx);
-  OP_CHECK_NULLPTR(cfg);
-
-  op_error_t code = OP_NO_ERROR;
-  
-  op_command_argument_t args = {0};
-  code = op_command_parser_handler(&args, 2, "ADD WATCH", "(I b aa)");
-  assert(code == OP_NO_ERROR);
-  if(code != OP_NO_ERROR) return code;
-  
-  uint8_t bank_value  = args.argv[0] % OP_BANK_COUNT;
-  uint8_t mem_address = args.argv[1] % OP_BANK_SIZE;
-                  
-  code = op_tool_insert_variable(cfg, bank_value, mem_address);
-  assert(code == OP_NO_ERROR);
-  if(code != OP_NO_ERROR){
-    printf("[Error adding variable watcher (code: %u)]\n", code);
-    return code; 
-  }
-  
-  printf("[Enabled memory watcher for bank:%i address:0x%02X]\n", bank_value, mem_address);                  
-  return OP_NO_ERROR;  
-}
-
-op_error_t op_command_remove_watch_variable(op_context_t *ctx, op_tool_config_t *cfg){
-  OP_CHECK_NULLPTR(ctx);
-  OP_CHECK_NULLPTR(cfg);
-
-  op_error_t code = OP_NO_ERROR;
-  
-  op_command_argument_t args = {0};
-  code = op_command_parser_handler(&args, 2, "ADD WATCH", "(I b aa)");
-  assert(code == OP_NO_ERROR);
-  if(code != OP_NO_ERROR) return code;
-  
-  uint8_t bank_value  = args.argv[0] % OP_BANK_COUNT;
-  uint8_t mem_address = args.argv[1] % OP_BANK_SIZE;
-                  
-  code = op_tool_remove_variable(cfg, bank_value, mem_address);
-  assert(code == OP_NO_ERROR);
-  if(code != OP_NO_ERROR){
-    printf("[Error removing variable watcher (code: %u)]\n", code);
-    return code; 
-  }
-  
-  printf("[Disabled memory watcher for bank:%i address:0x%02X]\n", bank_value, mem_address);                  
-  return OP_NO_ERROR;  
-}
-
-op_error_t op_hex_print_stream(const uint8_t *mem, const size_t length, FILE *stream ){
-  OP_CHECK_NULLPTR(mem);
-  OP_CHECK_NULLPTR(stream);
-
-  fprintf(stream, "Address  | 00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F |                 \n");
-  fprintf(stream, "----------------------------------------------------------------------------\n");
-
-  for(size_t i = 0; i < length; i++){
-    if((i % 0x10) == 0) fprintf(stream, "%08lX |", i);
-    fprintf(stream, " %02X", mem[i]);
-    if((i % 0x10) == 0xF) fprintf(stream, " | \n");
-  }
-  fprintf(stream, "\n");
-    
-  return OP_NO_ERROR;
-}
-
-op_error_t op_command_hex_dump(op_context_t *ctx){
-  OP_CHECK_NULLPTR(ctx);
-
-  op_error_t code = OP_NO_ERROR;
-  
-  printf("[Memory hex dump]\n");
-  for(size_t i = 0; i < OP_BANK_COUNT; i++){
-    printf("Bank %zu:\n", i);
-    code = op_hex_print_stream(ctx->memory[i], OP_BANK_SIZE, stdout);
-    assert(code == OP_NO_ERROR);
-    if(code != OP_NO_ERROR) goto error;
-  }
-  
-  return OP_NO_ERROR;
-error:
-  printf("[Error printing hex view of memory (code: %u)]\n", code);
-  return code;
-}
 
 int main(const int argc, const char **argv){
   op_error_t code = OP_NO_ERROR;
@@ -306,7 +95,7 @@ int main(const int argc, const char **argv){
     },
   };
 
-  instructions[0] = 0x27D5;
+//  instructions[0] = 0x27D5;
 
   op_context_t ctx = {0};
   op_context_init(&ctx, instructions, 0x1000, callback_print, &config);
@@ -325,7 +114,7 @@ int main(const int argc, const char **argv){
   do {
     c = fgetc(stdin);
 
-    switch(c & 0xDF){
+    switch(op_to_upper(c)){
       case 'L':  for(int i = 0; i < OP_INSTRUCTION_SET_COUNT; i++){
                      printf("\t%s, %s\n", op_instruction_set[i].name, op_instruction_set[i].description);
                   }
@@ -355,7 +144,7 @@ int main(const int argc, const char **argv){
       case 'D':   ctx.enrichedConfig.showDescription = !(ctx.enrichedConfig.showDescription);
                   printf("[Print instruction description %s]\n", (ctx.enrichedConfig.showDescription) ? "enabled" : "disabled" );
                   break;
-      case 'H':   printf("Help:\n\tL: Print instruction set\n\tK: Clear stdout\n\tS: Step\n\tP: toggle print\n\tW: toggle print W register\n\tC: toggle print PC\n\tV: toggle print instruction data\n\tD: toggle print description\n\tQ: quit\n\tR: reset\n\tH: print help\n\tG aaaa: goto (set pc to aaaa)\n\tM b aa vv: move (set memory bank b, address aa to vv)\n\tZ iiii: replace instruction at PC with iiii\n");
+      case 'H':   printf("Help:\n\tL: Print instruction set\n\tK: Clear stdout\n\tS: Step\n\tE nnnn: Step n times\n\tP: toggle print\n\tW: toggle print W register\n\tC: toggle print PC\n\tV: toggle print instruction data\n\tD: toggle print description\n\tQ: quit\n\tR: reset\n\tH: print help\n\tG aaaa: goto (set pc to aaaa)\n\tM b aa vv: move (set memory bank b, address aa to vv)\n\tZ iiii: replace instruction at PC with iiii\n\tI b aa: Add watchpoint for bank b, address aa\n\tO b aa: Remove watchpoint from bank b, address aa\n\tN: Hex print memory\n");
                   break;
       case 'G':   code = op_command_goto(&ctx);
                   printf(">> ");
@@ -373,21 +162,29 @@ int main(const int argc, const char **argv){
                   printf(">> ");
                   break;
       case 'N':   code = op_command_hex_dump(&ctx);
+                  break;
+      case 'E':   code = op_command_execute_n(&ctx);
                   printf(">> ");
                   break;
+      case 'Y':   code = op_command_execute_until_return(&ctx);
+                  break;
+      case '1':   code = op_command_save_program(&ctx);
+                  printf(">> ");
+                  break;
+      case '2':   code = op_command_save_memory(&ctx);
+                  printf(">> ");
+                  break;
+      case '3':   code = op_command_load_program(&ctx);
+                  break;
+//      case '4':   code = op_command_load_memory(&ctx);
+//                  break;
       case 'U':   for(size_t i = 0; i < OP_MAX_VARIABLE_COUNT; i++) cfg.variables[i].active = false;
                   printf("[All watch variables disabled]\n");
                   break;
       case '\n':  printf(">> ");
-                  break;
-//      case 'V':   code = op_command_view(&ctx, &cfg);
-//                  break;                 
-                  
+                  break;                  
     }
   } while(simulate);
-  
-//  ctx.memory[0][0xC] = 0x10;
-
   
   (void) argc;
   (void) argv;
@@ -395,63 +192,3 @@ int main(const int argc, const char **argv){
   return 0;
 }
 
-/*
-#include <stdio.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include <stdlib.h>
-#include <errno.h>
-
-#include "include/libopcode16.h"
-
-int main(const int argc, const char **argv) {
-    printf("Hola mundo\n");
-
-    for (int i = 0; i < OP_INSTRUCTION_SET_COUNT; i++) {
-        printf("\t%s, %s\n",
-               op_instruction_set[i].name,
-               op_instruction_set[i].description);
-    }
-
-    char input[32];
-
-    while (true) {
-        printf("\nIngrese una instrucción hexadecimal (q para salir): ");
-
-        if (fgets(input, sizeof(input), stdin) == NULL) {
-            break;
-        }
-
-        if (input[0] == 'q' || input[0] == 'Q') {
-            break;
-        }
-
-        char *endptr;
-        errno = 0;
-
-        unsigned long value = strtoul(input, &endptr, 16);
-
-        if (errno != 0 || endptr == input || value > UINT16_MAX) {
-            printf("Código hexadecimal inválido. Debe ser un valor entre 0x0000 y 0xFFFF.\n");
-            continue;
-        }
-
-        uint16_t instruction = (uint16_t)value;
-
-        op_instruction_result_t result = {0};
-
-        op_error_t code = op_decode_instruction(instruction, &result);
-
-        printf("Code: %u\n", code);
-
-        code = op_print_instruction_result(&result);
-
-        printf("Code: %u\n", code);
-    }
-
-    (void) argc;
-    (void) argv;
-
-    return 0;
-}
-*/
