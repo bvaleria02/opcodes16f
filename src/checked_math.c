@@ -17,6 +17,18 @@ op_error_t op_checked_size_add(const size_t a, const size_t b, size_t *c){
   return OP_NO_ERROR;
 }
 
+op_error_t op_checked_size_sub(const size_t a, const size_t b, size_t *c){
+  OP_CHECK_NULLPTR(c);
+
+  if(a < b){
+    return OP_ERROR_UNDERFLOW;
+  }
+
+  (*c) = a - b;
+
+  return OP_NO_ERROR;
+}
+
 op_error_t op_checked_size_mul(const size_t a, const size_t b, size_t *c){
   OP_CHECK_NULLPTR(c);
 

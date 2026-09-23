@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stddef.h>
-#include <linux/limits.h>
+#include <string.h>
 #include "../include/libopcode16.h"
 #include "../include/libopcodecontext.h"
 #include "../include/tool.h"
@@ -693,4 +693,42 @@ cleanup:
   if(buffer != NULL) free(buffer);
   if(code != OP_NO_ERROR) printf("[Error ocurred (code: %u)]\n", code);
   return code;
+}
+
+
+op_error_t op_context_replace_instruction_memory(op_context_t *ctx, const uint16_t *data, const size_t length, const size_t address){
+  OP_CHECK_NULLPTR(ctx);
+  OP_CHECK_NULLPTR(data);
+
+  op_error_t code = OP_NO_ERROR;
+
+  assert(address < OP_INSTRUCTION_MEMORY_SIZE);
+  if(address >= OP_INSTRUCTION_MEMORY_SIZE) return OP_ERROR_OUT_OF_BOUND;
+
+  assert(length != 0);
+  if(length == 0) return OP_ERROR_ZERO_LENGTH;
+
+  size_t end_offset = 0;
+  code = op_checked_size_add(address, length, &end_offset);
+  assert(code == OP_NO_ERROR);
+  if(code != OP_NO_ERROR) return code;
+  
+  size_t effective_length = length;
+  if(end_offset >= OP_INSTRUCTION_MEMORY_SIZE){
+    code = op_checked_size_sub(OP_INSTRUCTION_MEMORY_SIZE, address, &effective_length);
+    assert(code == OP_NO_ERROR);
+    if(code != OP_NO_ERROR) return code;
+  }
+
+  size_t total_size = 0;
+  code = op_checked_size_mul(effective_length, sizeof(uint16_t), &total_size);
+  assert(code == OP_NO_ERROR);
+  if(code != OP_NO_ERROR) return code;
+  
+  assert(total_size != 0);
+  if(total_size == 0) return OP_ERROR_ZERO_LENGTH;
+
+  memcpy(&(ctx->instruction_memory[address]), data, total_size);
+
+  return OP_NO_ERROR;
 }

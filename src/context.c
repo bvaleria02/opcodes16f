@@ -48,6 +48,20 @@ op_error_t op_context_init(op_context_t *ctx, uint16_t *instructions, size_t len
   return OP_NO_ERROR;
 }
 
+op_error_t op_context_init_blank(op_context_t *ctx, const op_enriched_instruction_config_t *encfg){
+  OP_CHECK_NULLPTR(ctx);
+
+  uint16_t ins[OP_INSTRUCTION_MEMORY_SIZE];
+
+  for(size_t i = 0; i < OP_INSTRUCTION_MEMORY_SIZE; i++){
+    ins[i] = 0x00;
+  }
+  
+  op_error_t code = op_context_init(ctx, ins, OP_INSTRUCTION_REGISTER_COUNT, NULL, encfg);
+  
+  return code;
+}
+  
 op_error_t op_context_run(op_context_t *ctx){
   OP_CHECK_NULLPTR(ctx);
   
@@ -97,6 +111,10 @@ op_error_t op_context_step(op_context_t *ctx){
     code = decoded_instruction.instruction->callback(ctx, &(ctx->lastInstruction));
     assert(code == OP_NO_ERROR);
     if(code != OP_NO_ERROR) return code;
+  } else {
+    ctx->pc += 1;
+    ctx->cycle_count += 1;
+    ctx->wait_cycles = 0;
   }
   
   // callback

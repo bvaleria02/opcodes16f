@@ -37,7 +37,7 @@ struct _op_context_t {
   size_t cycle_count;
   uint16_t stack[OP_STACK_SIZE];
   uint16_t sp;
-  uint16_t w;
+  uint8_t w;
   uint16_t f;
   size_t wait_cycles;
 
@@ -50,6 +50,7 @@ struct _op_context_t {
 extern op_context_vtable_t op_context_vtable_default;
 
 op_error_t op_context_init(op_context_t *ctx, uint16_t *instructions, size_t length, op_context_fn_callback_t callback, const op_enriched_instruction_config_t *encfg);
+op_error_t op_context_init_blank(op_context_t *ctx, const op_enriched_instruction_config_t *encfg);
 op_error_t op_context_run(op_context_t *ctx);
 op_error_t op_context_step(op_context_t *ctx);
 op_error_t op_context_reset(op_context_t *ctx);

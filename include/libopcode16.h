@@ -22,6 +22,7 @@ typedef enum _op_error_t{
   OP_ERROR_MALLOC = 9,
   OP_ERROR_COPY = 10,
   OP_ERROR_FSEEK = 11,
+  OP_ERROR_UNDERFLOW = 12,
 } op_error_t;
 
 #ifndef op_context_t

@@ -9,6 +9,7 @@
 #include "libopcode16.h"
 
 op_error_t op_checked_size_add(const size_t a, const size_t b, size_t *c);
+op_error_t op_checked_size_sub(const size_t a, const size_t b, size_t *c);
 op_error_t op_checked_size_mul(const size_t a, const size_t b, size_t *c);
 
 #endif //OP_CHECKED_MATH_H

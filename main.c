@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stddef.h>
-#include <linux/limits.h>
 #include "include/libopcode16.h"
 #include "include/libopcodecontext.h"
 #include "include/tool.h"
@@ -105,6 +104,14 @@ int main(const int argc, const char **argv){
     .print_w = true
   };
 
+
+  uint16_t ext_memory[8192];
+  for(size_t i = 0; i < 8192; i++){
+    ext_memory[i] = i;
+  }
+
+  op_context_replace_instruction_memory(&ctx, ext_memory, 8192, 0xF00);
+  
   op_context_set_external(&ctx, &cfg);
 
   char c = 0;
