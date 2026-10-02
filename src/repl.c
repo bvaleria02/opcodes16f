@@ -11,6 +11,72 @@
 #include "../include/checked_math.h"
 #include "../include/repl.h"
 
+const  op_enriched_instruction_config_t op_internal_repl_enriched_config = {
+    .showAddress = false,
+    .showDescription = false,
+    .showName = true,
+    .showFlagname = true,
+    .showValue = true,
+    .configB = {
+      .showName = true,
+      .showValue = true,
+      .showRegname = true,
+    },
+    .configD = {
+      .showName = true,
+      .showValue = true,
+      .showRegname = true,
+    },
+    .configW = {
+      .showName = true,
+      .showValue = true,
+      .showRegname = true,
+    },
+    .configK = {
+      .showName = true,
+      .showValue = true,
+      .showRegname = true,
+    },
+    .configF = {
+      .showName = true,
+      .showValue = true,
+      .showRegname = true,
+    },
+  };
+  
+op_error_t op_internal_instruction_print(op_context_t *ctx, size_t address){
+  OP_CHECK_NULLPTR(ctx);
+  
+  op_error_t code = OP_NO_ERROR;
+
+  assert(address < OP_INSTRUCTION_MEMORY_SIZE);
+  if(address >= OP_INSTRUCTION_MEMORY_SIZE) return OP_ERROR_OUT_OF_BOUND;
+
+  uint16_t instruction = ctx->instruction_memory[address];
+  
+  op_instruction_result_t decoded_instruction = {0};
+  code = op_decode_instruction(instruction, &decoded_instruction);
+  assert(code == OP_NO_ERROR);
+  if(code != OP_NO_ERROR) return code;
+  
+  uint8_t bank = 0;
+  code = op_context_fetch_bank(ctx, &bank);
+  assert(code == OP_NO_ERROR);
+  if(code != OP_NO_ERROR) return code;
+
+  code = op_enrich_decode_result(&(ctx->lastInstruction), &decoded_instruction, ctx->pc, bank);
+  assert(code == OP_NO_ERROR);
+  if(code != OP_NO_ERROR) return code;
+  
+  printf("[Instruction at address=0x%04X has opcode 0x%04X] ", ctx->pc, instruction);
+  code = op_enriched_print_stream(&(ctx->lastInstruction), &op_internal_repl_enriched_config, stdout);
+  assert(code == OP_NO_ERROR);
+  if(code != OP_NO_ERROR) return code;
+  printf("\n");
+  
+  return OP_NO_ERROR;
+}
+
 op_error_t op_command_parser_handler(op_command_argument_t *args, const size_t minargs, const char *name, const char *help){
   OP_CHECK_NULLPTR(args);
 
@@ -82,62 +148,13 @@ op_error_t op_command_replace(op_context_t *ctx){
   
   uint16_t instruction = args.argv[0] & 0x3FFF;
   uint16_t pc = (ctx->pc >= OP_INSTRUCTION_MEMORY_SIZE) ? (OP_INSTRUCTION_MEMORY_SIZE - 1) : ctx->pc;
-
-  op_instruction_result_t decoded_instruction = {0};
-  code = op_decode_instruction(instruction, &decoded_instruction);
-  assert(code == OP_NO_ERROR);
-  if(code != OP_NO_ERROR) return code;
-
-  op_enriched_instruction_t enriched = {0};
-  op_enriched_instruction_config_t config = {
-    .showAddress = false,
-    .showDescription = false,
-    .showName = true,
-    .showFlagname = true,
-    .showValue = true,
-    .configB = {
-      .showName = true,
-      .showValue = true,
-      .showRegname = true,
-    },
-    .configD = {
-      .showName = true,
-      .showValue = true,
-      .showRegname = true,
-    },
-    .configW = {
-      .showName = true,
-      .showValue = true,
-      .showRegname = true,
-    },
-    .configK = {
-      .showName = true,
-      .showValue = true,
-      .showRegname = true,
-    },
-    .configF = {
-      .showName = true,
-      .showValue = true,
-      .showRegname = true,
-    },
-  };
-
-  uint8_t bank = 0;
-  code = op_context_fetch_bank(ctx, &bank);
-  assert(code == OP_NO_ERROR);
-  if(code != OP_NO_ERROR) return code;
-
-  code = op_enrich_decode_result(&enriched, &decoded_instruction, pc, bank);
-  assert(code == OP_NO_ERROR);
-  if(code != OP_NO_ERROR) return code;
   
   ctx->instruction_memory[pc] = instruction;
   
-  printf("[Set instruction at address=0x%04X to 0x%04X] ", pc, instruction);
-  code = op_enriched_print_stream(&enriched, &config, stdout);
+  printf("[Set instruction at address=0x%04X to 0x%04X]\n", pc, instruction);
+  code = op_internal_instruction_print(ctx, ctx->pc);
   assert(code == OP_NO_ERROR);
   if(code != OP_NO_ERROR) return code;
-  printf("\n");
                   
   return OP_NO_ERROR;  
 }
@@ -731,4 +748,136 @@ op_error_t op_context_replace_instruction_memory(op_context_t *ctx, const uint16
   memcpy(&(ctx->instruction_memory[address]), data, total_size);
 
   return OP_NO_ERROR;
+}
+
+
+
+op_error_t op_command_rewind_pc(op_context_t *ctx){
+  OP_CHECK_NULLPTR(ctx);
+
+  op_error_t code = OP_NO_ERROR;
+
+  if(ctx->pc == 0){
+    printf("[Can't rewind more]\n");
+    return OP_NO_ERROR;
+  }
+
+  
+  size_t new_pc = 0;
+  code = op_checked_size_sub(ctx->pc, 1, &new_pc);
+  assert(code == OP_NO_ERROR);
+  if(code != OP_NO_ERROR) return code;
+
+  ctx->pc = new_pc;
+
+  printf("[PC rewinded to 0x%04X]\n", ctx->pc);
+  code = op_internal_instruction_print(ctx, ctx->pc);
+  assert(code == OP_NO_ERROR);
+  if(code != OP_NO_ERROR) return code;
+  
+  return OP_NO_ERROR;
+}
+
+op_error_t op_command_advance_pc(op_context_t *ctx){
+  OP_CHECK_NULLPTR(ctx);
+  
+  op_error_t code = OP_NO_ERROR;
+
+  size_t new_pc = 0;
+  code = op_checked_size_add(ctx->pc, 1, &new_pc);
+  assert(code == OP_NO_ERROR);
+  if(code != OP_NO_ERROR) return code;
+
+  ctx->pc = new_pc;
+
+  printf("[PC advanced to 0x%04X]\n", ctx->pc);
+  code = op_internal_instruction_print(ctx, ctx->pc);
+  assert(code == OP_NO_ERROR);
+  if(code != OP_NO_ERROR) return code;
+  
+  return OP_NO_ERROR;
+}
+
+op_error_t op_command_test_instruction(op_context_t *ctx){
+  OP_CHECK_NULLPTR(ctx);
+
+  op_error_t code = OP_NO_ERROR;
+
+  code = op_internal_instruction_print(ctx, ctx->pc);
+  assert(code == OP_NO_ERROR);
+  if(code != OP_NO_ERROR) return code;
+  
+  return OP_NO_ERROR;
+}
+
+op_error_t op_command_execute_no_store(op_context_t *ctx){
+  OP_CHECK_NULLPTR(ctx);
+  
+  op_error_t code = OP_NO_ERROR;
+  
+  op_command_argument_t args = {0};
+  code = op_command_parser_handler(&args, 1, "EXECUTE_NO_STORE", "(X iiii)");
+  assert(code == OP_NO_ERROR);
+  if(code != OP_NO_ERROR) return code;
+  
+  uint16_t instruction = args.argv[0] & 0x3FFF;
+  uint16_t pc = (ctx->pc >= OP_INSTRUCTION_MEMORY_SIZE) ? (OP_INSTRUCTION_MEMORY_SIZE - 1) : ctx->pc;
+
+  uint16_t old_instruction = ctx->instruction_memory[pc];
+  size_t old_pc = pc;
+  
+  ctx->instruction_memory[pc] = instruction;
+  
+  printf("[Executing instruction with opcode 0x%04X]\n", instruction);
+  code = op_internal_instruction_print(ctx, ctx->pc);
+  assert(code == OP_NO_ERROR);
+  if(code != OP_NO_ERROR) return code;
+  
+  code = op_context_step(ctx);
+  assert(code == OP_NO_ERROR);
+  if(code != OP_NO_ERROR) return code;
+
+  ctx->instruction_memory[old_pc] = old_instruction;
+  
+  return OP_NO_ERROR;
+}
+
+op_error_t op_command_replace_and_step(op_context_t *ctx){
+  OP_CHECK_NULLPTR(ctx);
+
+  op_error_t code = OP_NO_ERROR;
+  
+  code = op_command_replace(ctx);
+  assert(code == OP_NO_ERROR);
+  if(code != OP_NO_ERROR) return code;
+  
+  code = op_context_step(ctx);
+  assert(code == OP_NO_ERROR);
+  if(code != OP_NO_ERROR) return code;
+                  
+  return OP_NO_ERROR;  
+}
+
+op_error_t op_command_replace_and_advance(op_context_t *ctx){
+  OP_CHECK_NULLPTR(ctx);
+
+  op_error_t code = OP_NO_ERROR;
+  
+  code = op_command_replace(ctx);
+  assert(code == OP_NO_ERROR);
+  if(code != OP_NO_ERROR) return code;
+  
+  code = op_command_advance_pc(ctx);
+  assert(code == OP_NO_ERROR);
+  if(code != OP_NO_ERROR) return code;
+                  
+  return OP_NO_ERROR;  
+}
+
+op_error_t op_command_print_help(op_context_t *ctx){
+  OP_CHECK_NULLPTR(ctx);
+
+  printf("Help:\n\tL: Print instruction set\n\tK: Clear stdout\n\tS: Step\n\tE nnnn: Step n times\n\tP: toggle print\n\tW: toggle print W register\n\tC: toggle print PC\n\tV: toggle print instruction data\n\tD: toggle print description\n\tQ: quit\n\tR: reset\n\tH: print help\n\tG aaaa: goto (set pc to aaaa)\n\tM b aa vv: move (set memory bank b, address aa to vv)\n\tZ iiii: replace instruction at PC with iiii\n\tI b aa: Add watchpoint for bank b, address aa\n\tO b aa: Remove watchpoint from bank b, address aa\n\tN: Hex print memory\n");
+        
+  return OP_NO_ERROR;  
 }

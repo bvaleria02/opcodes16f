@@ -36,4 +36,12 @@ op_error_t op_command_load_memory(op_context_t *ctx);
 char op_to_upper(const char c);
 op_error_t op_context_replace_instruction_memory(op_context_t *ctx, const uint16_t *data, const size_t length, const size_t address);
 
+op_error_t op_command_rewind_pc(op_context_t *ctx);
+op_error_t op_command_advance_pc(op_context_t *ctx);
+op_error_t op_command_test_instruction(op_context_t *ctx);
+op_error_t op_command_execute_no_store(op_context_t *ctx);
+op_error_t op_command_replace_and_step(op_context_t *ctx);
+op_error_t op_command_replace_and_advance(op_context_t *ctx);
+op_error_t op_command_print_help(op_context_t *ctx);
+
 #endif //LIB_OP_CODE_REPL_H

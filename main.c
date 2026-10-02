@@ -120,8 +120,9 @@ int main(const int argc, const char **argv){
   
   do {
     c = fgetc(stdin);
+    c = op_to_upper(c);
 
-    switch(op_to_upper(c)){
+    switch(c){
       case 'L':  for(int i = 0; i < OP_INSTRUCTION_SET_COUNT; i++){
                      printf("\t%s, %s\n", op_instruction_set[i].name, op_instruction_set[i].description);
                   }
@@ -148,10 +149,10 @@ int main(const int argc, const char **argv){
       case 'V':   ctx.enrichedConfig.showValue = !(ctx.enrichedConfig.showValue);
                   printf("[Print instruction value %s]\n", (ctx.enrichedConfig.showValue) ? "enabled" : "disabled" );
                   break;
-      case 'D':   ctx.enrichedConfig.showDescription = !(ctx.enrichedConfig.showDescription);
+      case 'F':   ctx.enrichedConfig.showDescription = !(ctx.enrichedConfig.showDescription);
                   printf("[Print instruction description %s]\n", (ctx.enrichedConfig.showDescription) ? "enabled" : "disabled" );
                   break;
-      case 'H':   printf("Help:\n\tL: Print instruction set\n\tK: Clear stdout\n\tS: Step\n\tE nnnn: Step n times\n\tP: toggle print\n\tW: toggle print W register\n\tC: toggle print PC\n\tV: toggle print instruction data\n\tD: toggle print description\n\tQ: quit\n\tR: reset\n\tH: print help\n\tG aaaa: goto (set pc to aaaa)\n\tM b aa vv: move (set memory bank b, address aa to vv)\n\tZ iiii: replace instruction at PC with iiii\n\tI b aa: Add watchpoint for bank b, address aa\n\tO b aa: Remove watchpoint from bank b, address aa\n\tN: Hex print memory\n");
+      case 'H':   code = op_command_print_help(&ctx);
                   break;
       case 'G':   code = op_command_goto(&ctx);
                   printf(">> ");
@@ -188,9 +189,33 @@ int main(const int argc, const char **argv){
       case 'U':   for(size_t i = 0; i < OP_MAX_VARIABLE_COUNT; i++) cfg.variables[i].active = false;
                   printf("[All watch variables disabled]\n");
                   break;
+      case 'A':   code = op_command_rewind_pc(&ctx);
+                  break;
+      case 'D':   code = op_command_advance_pc(&ctx);
+                  break;
+      case 'T':   code = op_command_test_instruction(&ctx);
+                  break;
+      case 'X':   code = op_command_execute_no_store(&ctx);
+                  printf(">> ");
+                  break;
+      case 'B':   code = op_command_replace_and_step(&ctx);
+                  printf(">> ");
+                  break;
+      case 'J':   code = op_command_replace_and_advance(&ctx);
+                  printf(">> ");
+                  break;
       case '\n':  printf(">> ");
-                  break;                  
+                  break;
+      case EOF:   printf("[End simulation]\n");
+                  simulate = false;
+                  break;
+      default: printf("Unknown command. Press H for help\n");
     }
+
+    if(code != OP_NO_ERROR){
+        printf("[Error executing last instruction (code: %u)]\n", code);
+    }
+
   } while(simulate);
   
   (void) argc;
