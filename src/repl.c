@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -102,8 +103,9 @@ error:
   return code;
 }
 
-op_error_t op_command_goto(op_context_t *ctx){
+op_error_t op_command_goto(op_context_t *ctx, op_tool_config_t *cfg){
   OP_CHECK_NULLPTR(ctx);
+  (void) cfg;
 
   op_error_t code = OP_NO_ERROR;
   
@@ -117,8 +119,9 @@ op_error_t op_command_goto(op_context_t *ctx){
   return OP_NO_ERROR;  
 }
 
-op_error_t op_command_move(op_context_t *ctx){
+op_error_t op_command_move(op_context_t *ctx, op_tool_config_t *cfg){
   OP_CHECK_NULLPTR(ctx);
+  (void) cfg;
 
   op_error_t code = OP_NO_ERROR;
   
@@ -136,8 +139,9 @@ op_error_t op_command_move(op_context_t *ctx){
   return OP_NO_ERROR;  
 }
 
-op_error_t op_command_replace(op_context_t *ctx){
+op_error_t op_command_replace(op_context_t *ctx, op_tool_config_t *cfg){
   OP_CHECK_NULLPTR(ctx);
+  (void) cfg;
 
   op_error_t code = OP_NO_ERROR;
   
@@ -226,8 +230,9 @@ op_error_t op_hex_print_stream(const uint8_t *mem, const size_t length, FILE *st
   return OP_NO_ERROR;
 }
 
-op_error_t op_command_hex_dump(op_context_t *ctx){
+op_error_t op_command_hex_dump(op_context_t *ctx, op_tool_config_t *cfg){
   OP_CHECK_NULLPTR(ctx);
+  (void) cfg;
 
   op_error_t code = OP_NO_ERROR;
   uint8_t buffer[OP_BANK_SIZE];
@@ -252,8 +257,9 @@ error:
   return code;
 }
 
-op_error_t op_command_execute_n(op_context_t *ctx){
+op_error_t op_command_execute_n(op_context_t *ctx, op_tool_config_t *cfg){
   OP_CHECK_NULLPTR(ctx);
+  (void) cfg;
 
   op_error_t code = OP_NO_ERROR;
   
@@ -275,8 +281,9 @@ op_error_t op_command_execute_n(op_context_t *ctx){
   return OP_NO_ERROR;  
 }
 
-op_error_t op_command_execute_until_return(op_context_t *ctx){
+op_error_t op_command_execute_until_return(op_context_t *ctx, op_tool_config_t *cfg){
   OP_CHECK_NULLPTR(ctx);
+  (void) cfg;
 
   op_error_t code = OP_NO_ERROR;
   
@@ -466,8 +473,9 @@ op_error_t op_uint16_to_bytes(const uint16_t *src, const size_t src_length, uint
   return OP_NO_ERROR;
 }
 
-op_error_t op_command_save_program(op_context_t *ctx){
+op_error_t op_command_save_program(op_context_t *ctx, op_tool_config_t *cfg){
   OP_CHECK_NULLPTR(ctx);
+  (void) cfg;
 
   op_error_t code = OP_NO_ERROR;
   uint8_t *buffer = NULL;
@@ -515,8 +523,9 @@ char op_to_upper(const char c){
   return (c >= 'a' && c <= 'z') ? c & 0xDF : c;
 }
 
-op_error_t op_command_save_memory(op_context_t *ctx){
+op_error_t op_command_save_memory(op_context_t *ctx, op_tool_config_t *cfg){
   OP_CHECK_NULLPTR(ctx);
+  (void) cfg;
 
   op_error_t code = OP_NO_ERROR;
   uint8_t *buffer = NULL;
@@ -666,8 +675,9 @@ op_error_t op_bytes_to_uint16(const uint8_t *src, const size_t src_length, uint1
   return OP_NO_ERROR;
 }
 
-op_error_t op_command_load_program(op_context_t *ctx){
+op_error_t op_command_load_program(op_context_t *ctx, op_tool_config_t *cfg){
   OP_CHECK_NULLPTR(ctx);
+  (void) cfg;
 
   op_error_t code = OP_NO_ERROR;
   uint8_t *buffer = NULL;
@@ -752,8 +762,9 @@ op_error_t op_context_replace_instruction_memory(op_context_t *ctx, const uint16
 
 
 
-op_error_t op_command_rewind_pc(op_context_t *ctx){
+op_error_t op_command_rewind_pc(op_context_t *ctx, op_tool_config_t *cfg){
   OP_CHECK_NULLPTR(ctx);
+  (void) cfg;
 
   op_error_t code = OP_NO_ERROR;
 
@@ -778,8 +789,9 @@ op_error_t op_command_rewind_pc(op_context_t *ctx){
   return OP_NO_ERROR;
 }
 
-op_error_t op_command_advance_pc(op_context_t *ctx){
+op_error_t op_command_advance_pc(op_context_t *ctx, op_tool_config_t *cfg){
   OP_CHECK_NULLPTR(ctx);
+  (void) cfg;
   
   op_error_t code = OP_NO_ERROR;
 
@@ -798,8 +810,9 @@ op_error_t op_command_advance_pc(op_context_t *ctx){
   return OP_NO_ERROR;
 }
 
-op_error_t op_command_test_instruction(op_context_t *ctx){
+op_error_t op_command_test_instruction(op_context_t *ctx, op_tool_config_t *cfg){
   OP_CHECK_NULLPTR(ctx);
+  (void) cfg;
 
   op_error_t code = OP_NO_ERROR;
 
@@ -810,8 +823,9 @@ op_error_t op_command_test_instruction(op_context_t *ctx){
   return OP_NO_ERROR;
 }
 
-op_error_t op_command_execute_no_store(op_context_t *ctx){
+op_error_t op_command_execute_no_store(op_context_t *ctx, op_tool_config_t *cfg){
   OP_CHECK_NULLPTR(ctx);
+  (void) cfg;
   
   op_error_t code = OP_NO_ERROR;
   
@@ -842,12 +856,13 @@ op_error_t op_command_execute_no_store(op_context_t *ctx){
   return OP_NO_ERROR;
 }
 
-op_error_t op_command_replace_and_step(op_context_t *ctx){
+op_error_t op_command_replace_and_step(op_context_t *ctx, op_tool_config_t *cfg){
   OP_CHECK_NULLPTR(ctx);
+  (void) cfg;
 
   op_error_t code = OP_NO_ERROR;
   
-  code = op_command_replace(ctx);
+  code = op_command_replace(ctx, cfg);
   assert(code == OP_NO_ERROR);
   if(code != OP_NO_ERROR) return code;
   
@@ -858,26 +873,440 @@ op_error_t op_command_replace_and_step(op_context_t *ctx){
   return OP_NO_ERROR;  
 }
 
-op_error_t op_command_replace_and_advance(op_context_t *ctx){
+op_error_t op_command_replace_and_advance(op_context_t *ctx, op_tool_config_t *cfg){
   OP_CHECK_NULLPTR(ctx);
+  (void) cfg;
 
   op_error_t code = OP_NO_ERROR;
   
-  code = op_command_replace(ctx);
+  code = op_command_replace(ctx, cfg);
   assert(code == OP_NO_ERROR);
   if(code != OP_NO_ERROR) return code;
   
-  code = op_command_advance_pc(ctx);
+  code = op_command_advance_pc(ctx, cfg);
   assert(code == OP_NO_ERROR);
   if(code != OP_NO_ERROR) return code;
                   
   return OP_NO_ERROR;  
 }
 
-op_error_t op_command_print_help(op_context_t *ctx){
+op_error_t op_command_print_help(op_context_t *ctx, op_tool_config_t *cfg){
   OP_CHECK_NULLPTR(ctx);
+  (void) cfg;
 
   printf("Help:\n\tL: Print instruction set\n\tK: Clear stdout\n\tS: Step\n\tE nnnn: Step n times\n\tP: toggle print\n\tW: toggle print W register\n\tC: toggle print PC\n\tV: toggle print instruction data\n\tD: toggle print description\n\tQ: quit\n\tR: reset\n\tH: print help\n\tG aaaa: goto (set pc to aaaa)\n\tM b aa vv: move (set memory bank b, address aa to vv)\n\tZ iiii: replace instruction at PC with iiii\n\tI b aa: Add watchpoint for bank b, address aa\n\tO b aa: Remove watchpoint from bank b, address aa\n\tN: Hex print memory\n");
         
   return OP_NO_ERROR;  
+}
+
+const op_repl_mnemonic_t op_repl_mnemonics[OP_REPL_MNEMONIC_COUNT] = {
+  {
+    .command     = "instruction-list",
+    .shortcmd    = 'L',
+    .hint        = NULL,
+    .description = "Print instruction list",
+    .func        = op_command_print_instruction_set,
+    .consumer    = false,
+  },
+  {
+    .command     = "step",
+    .shortcmd    = 'S',
+    .hint        = NULL,
+    .description = "Step simulation",
+    .func        = op_command_step,
+    .consumer    = false,
+  },
+  {
+    .command     = "toggle-print",
+    .shortcmd    = 'P',
+    .hint        = NULL,
+    .description = "Toggle print uppon simulation step",
+    .func        = op_command_master_print,
+    .consumer    = false,
+  },
+  {
+    .command     = "clear",
+    .shortcmd    = 'K',
+    .hint        = NULL,
+    .description = "Clear screen",
+    .func        = op_command_clear,
+    .consumer    = false,
+  },
+  {
+    .command     = "print-w",
+    .shortcmd    = 'W',
+    .hint        = NULL,
+    .description = "Print W register value on step",
+    .func        = op_command_print_w,
+    .consumer    = false,
+  },
+  {
+    .command     = "quit",
+    .shortcmd    = 'Q',
+    .hint        = NULL,
+    .description = "End simulation",
+    .func        = op_command_quit,
+    .consumer    = false,
+  },
+  {
+    .command     = "reset-pc",
+    .shortcmd    = 'R',
+    .hint        = NULL,
+    .description = "Set PC to 0",
+    .func        = op_command_reset_pc,
+    .consumer    = false,
+  },
+  {
+    .command     = "print-pc",
+    .shortcmd    = 'C',
+    .hint        = NULL,
+    .description = "Print PC on simulation step",
+    .func        = op_command_show_address,
+    .consumer    = false,
+  },
+  {
+    .command     = "print-value",
+    .shortcmd    = 'V',
+    .hint        = NULL,
+    .description = "Print raw opcode on simulation step",
+    .func        = op_command_show_opcode,
+    .consumer    = false,
+  },
+  {
+    .command     = "print-description",
+    .shortcmd    = 'F',
+    .hint        = NULL,
+    .description = "Print instruction description on simulation step",
+    .func        = op_command_show_description,
+    .consumer    = false,
+  },
+  {
+    .command     = "help",
+    .shortcmd    = 'H',
+    .hint        = NULL,
+    .description = "Show all simulator commands",
+    .func        = op_command_print_help,
+    .consumer    = false,
+  },
+  {
+    .command     = "goto",
+    .shortcmd    = 'G',
+    .hint        = "aaaa",
+    .description = "Set PC to address aaaa",
+    .func        = op_command_goto,
+    .consumer    = true,
+  },
+  {
+    .command     = "set-memory",
+    .shortcmd    = 'M',
+    .hint        = "b aa vv",
+    .description = "Set memory at bank b, address aa to value vv",
+    .func        = op_command_move,
+    .consumer    = true,
+  },
+  {
+    .command     = "replace-instruction",
+    .shortcmd    = 'Z',
+    .hint        = "iiii",
+    .description = "Replace current instruction to iiii",
+    .func        = op_command_replace,
+    .consumer    = true,
+  },
+  {
+    .command     = "add-watchpoint",
+    .shortcmd    = 'I',
+    .hint        = "b aa",
+    .description = "Add memory watchpoint to bank b, address aa",
+    .func        = op_command_add_watch_variable,
+    .consumer    = true,
+  },
+  {
+    .command     = "remove-watchpoint",
+    .shortcmd    = 'O',
+    .hint        = "b aa",
+    .description = "Remove memory watchpoint from bank b, address aa",
+    .func        = op_command_remove_watch_variable,
+    .consumer    = true,
+  },
+  {
+    .command     = "hex-dump",
+    .shortcmd    = 'N',
+    .hint        = NULL,
+    .description = "Dump memory as hex view",
+    .func        = op_command_hex_dump,
+    .consumer    = false,
+  },
+  {
+    .command     = "execute-n",
+    .shortcmd    = 'E',
+    .hint        = "nnnn",
+    .description = "Execute nnnn instructions",
+    .func        = op_command_execute_n,
+    .consumer    = true,
+  },
+  {
+    .command     = "execute-until-return",
+    .shortcmd    = 'Y',
+    .hint        = NULL,
+    .description = "Continue executing until RETURN, RETLW or RETFIE instruction",
+    .func        = op_command_execute_until_return,
+    .consumer    = false,
+  },
+  {
+    .command     = "save-program",
+    .shortcmd    = '1',
+    .hint        = NULL,
+    .description = "Save program to file",
+    .func        = op_command_save_program,
+    .consumer    = true,
+  },
+  {
+    .command     = "save-memory",
+    .shortcmd    = '2',
+    .hint        = NULL,
+    .description = "Save memory to file",
+    .func        = op_command_save_memory,
+    .consumer    = true,
+  },
+  {
+    .command     = "load-program",
+    .shortcmd    = '3',
+    .hint        = NULL,
+    .description = "Load program from file",
+    .func        = op_command_load_program,
+    .consumer    = true,
+  },
+  {
+    .command     = "remove-all-watchpoints",
+    .shortcmd    = 'U',
+    .hint        = NULL,
+    .description = "Remove all watchpoints",
+    .func        = op_command_unset_watchpoints,
+    .consumer    = false,
+  },
+  {
+    .command     = "rewind",
+    .shortcmd    = 'A',
+    .hint        = NULL,
+    .description = "Rewinds PC 1 word",
+    .func        = op_command_rewind_pc,
+    .consumer    = false,
+  },
+  {
+    .command     = "advance",
+    .shortcmd    = 'D',
+    .hint        = NULL,
+    .description = "Advance PC 1 word",
+    .func        = op_command_advance_pc,
+    .consumer    = false,
+  },
+  {
+    .command     = "test",
+    .shortcmd    = 'T',
+    .hint        = NULL,
+    .description = "Show instruction at current PC",
+    .func        = op_command_test_instruction,
+    .consumer    = false,
+  },
+  {
+    .command     = "execute",
+    .shortcmd    = 'X',
+    .hint        = "iiii",
+    .description = "Execute instruction without modifying program memory",
+    .func        = op_command_execute_no_store,
+    .consumer    = true,
+  },
+  {
+    .command     = "replace-step",
+    .shortcmd    = 'B',
+    .hint        = "iiii",
+    .description = "Replace instruction and step",
+    .func        = op_command_replace_and_step,
+    .consumer    = true,
+  },
+  {
+    .command     = "replace-advance",
+    .shortcmd    = 'J',
+    .hint        = "iiii",
+    .description = "Replace instruction and advance PC, without stepping",
+    .func        = op_command_replace_and_advance,
+    .consumer    = true,
+  },
+};
+
+#define OP_REPL_HANDLER_BUFFER_SIZE 64
+
+op_error_t op_repl_mnemonic_handler(op_context_t *ctx, op_tool_config_t *cfg){
+  OP_CHECK_NULLPTR(ctx);
+  OP_CHECK_NULLPTR(cfg);
+
+  op_error_t code = OP_NO_ERROR;
+
+  char buffer[OP_REPL_HANDLER_BUFFER_SIZE];
+
+  int response = scanf("%63s", buffer);
+  if(response != 1){
+    printf("[Error parsing incoming input from stdin]\n");
+    op_clear_stream(stdin);
+    return OP_ERROR_STDIN;
+  }
+
+  buffer[OP_REPL_HANDLER_BUFFER_SIZE - 1] = '\0';
+
+  bool found = false;
+  bool executed = false;
+  for(size_t i = 0; i < OP_REPL_MNEMONIC_COUNT; i++){
+    int c = strncmp(buffer, op_repl_mnemonics[i].command, OP_REPL_HANDLER_BUFFER_SIZE);
+
+    // c == 0 means equals
+    if(c != 0) continue;
+
+    found = true;
+    if(op_repl_mnemonics[i].func != NULL){
+      code = op_repl_mnemonics[i].func(ctx, cfg);
+      assert(code == OP_NO_ERROR);
+      if(code != OP_NO_ERROR) return code;
+      executed = true;
+    }
+    
+    if(op_repl_mnemonics[i].consumer){
+        printf(">> ");
+    }
+
+    break;
+  }
+
+  if(!found){
+    printf("No matching mnemonic found for your input\n");
+    goto clear_stdin;
+  }
+  
+  if(found && !executed){
+    printf("Matching mnemonic found for your input, but no callback found\n");
+    goto clear_stdin;
+  }
+
+  if(code != OP_NO_ERROR){
+      printf("[Error executing last instruction (code: %u)]\n", code);
+  }
+  
+  return code;
+  
+clear_stdin:
+  op_clear_stream(stdin);
+  return code;
+}
+
+op_error_t op_command_print_instruction_set(op_context_t *ctx, op_tool_config_t *cfg){
+  (void) ctx;
+  (void) cfg;
+  
+  for(int i = 0; i < OP_INSTRUCTION_SET_COUNT; i++){
+    printf("\t%s, %s\n", op_instruction_set[i].name, op_instruction_set[i].description);
+  }
+
+  return OP_NO_ERROR;  
+}
+
+op_error_t op_command_step(op_context_t *ctx, op_tool_config_t *cfg){
+  OP_CHECK_NULLPTR(ctx);
+  (void) cfg;
+
+  op_error_t code = OP_NO_ERROR;
+
+  code = op_context_step(ctx);
+  
+  return code;
+}
+
+op_error_t op_command_master_print(op_context_t *ctx, op_tool_config_t *cfg){
+  OP_CHECK_NULLPTR(cfg);
+  (void) ctx;
+
+  cfg->print = !(cfg->print);
+  printf("[Master print %s]\n", (cfg->print) ? "enabled" : "disabled" );
+
+  return OP_NO_ERROR;
+}
+
+op_error_t op_command_clear(op_context_t *ctx, op_tool_config_t *cfg){
+  (void) ctx;
+  (void) cfg;
+    
+  printf("\033[2J");    
+  
+  return OP_NO_ERROR;  
+}
+
+op_error_t op_command_print_w(op_context_t *ctx, op_tool_config_t *cfg){
+  OP_CHECK_NULLPTR(cfg);
+  (void) ctx;
+
+  cfg->print_w = !(cfg->print_w);
+  printf("[Print register W %s]\n", (cfg->print_w) ? "enabled" : "disabled" );
+
+  return OP_NO_ERROR;
+}
+
+op_error_t op_command_quit(op_context_t *ctx, op_tool_config_t *cfg){
+  OP_CHECK_NULLPTR(cfg);
+  (void) ctx;
+
+  printf("[End simulation]\n");
+  cfg->simulate = false;
+
+  return OP_NO_ERROR;
+}
+
+op_error_t op_command_reset_pc(op_context_t *ctx, op_tool_config_t *cfg){
+  OP_CHECK_NULLPTR(ctx);
+  (void) cfg;
+
+  ctx->pc = 0;
+  printf("[PC reset (set to 0)]\n");
+
+  return OP_NO_ERROR;
+}
+
+op_error_t op_command_show_address(op_context_t *ctx, op_tool_config_t *cfg){
+  OP_CHECK_NULLPTR(ctx);
+  (void) cfg;
+
+  ctx->enrichedConfig.showAddress = !(ctx->enrichedConfig.showAddress);
+  printf("[Print PC %s]\n", (ctx->enrichedConfig.showAddress) ? "enabled" : "disabled" );
+
+  return OP_NO_ERROR;
+}
+
+op_error_t op_command_show_opcode(op_context_t *ctx, op_tool_config_t *cfg){
+  OP_CHECK_NULLPTR(ctx);
+  (void) cfg;
+
+  ctx->enrichedConfig.showValue = !(ctx->enrichedConfig.showValue);
+  printf("[Print instruction value %s]\n", (ctx->enrichedConfig.showValue) ? "enabled" : "disabled" );
+
+  return OP_NO_ERROR;
+}
+
+op_error_t op_command_show_description(op_context_t *ctx, op_tool_config_t *cfg){
+  OP_CHECK_NULLPTR(ctx);
+  (void) cfg;
+
+  ctx->enrichedConfig.showDescription = !(ctx->enrichedConfig.showDescription);
+  printf("[Print instruction description %s]\n", (ctx->enrichedConfig.showDescription) ? "enabled" : "disabled" );
+
+  return OP_NO_ERROR;
+}
+
+op_error_t op_command_unset_watchpoints(op_context_t *ctx, op_tool_config_t *cfg){
+  OP_CHECK_NULLPTR(ctx);
+  OP_CHECK_NULLPTR(cfg);
+
+  for(size_t i = 0; i < OP_MAX_VARIABLE_COUNT; i++){
+    cfg->variables[i].active = false;
+  }
+  
+  printf("[All watch variables disabled]\n");
+
+  return OP_NO_ERROR;
 }

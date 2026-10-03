@@ -19,6 +19,7 @@ typedef struct {
 } op_variable_supervisor_t;
 
 typedef struct {
+  bool simulate;
   bool print;
   bool print_w;
   op_variable_supervisor_t variables[OP_MAX_VARIABLE_COUNT];

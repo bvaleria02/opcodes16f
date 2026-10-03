@@ -18,30 +18,59 @@
   #define PATH_LENGTH (PATH_MAX)
 #endif
 
+typedef op_error_t (*op_repl_function_t)(op_context_t *, op_tool_config_t *);
+
+typedef struct {
+  const char *command;
+  const char shortcmd;
+  const char *name;
+  const char *hint;
+  const char *description;
+  const op_repl_function_t func;
+  const bool consumer;
+} op_repl_mnemonic_t;
+
+#define OP_REPL_MNEMONIC_COUNT 29
+extern const op_repl_mnemonic_t op_repl_mnemonics[OP_REPL_MNEMONIC_COUNT];
+
 op_error_t op_command_parser_handler(op_command_argument_t *args, const size_t minargs, const char *name, const char *help);
 
-op_error_t op_command_goto(op_context_t *ctx);
-op_error_t op_command_move(op_context_t *ctx);
-op_error_t op_command_replace(op_context_t *ctx);
+op_error_t op_command_goto(op_context_t *ctx, op_tool_config_t *cfg);
+op_error_t op_command_move(op_context_t *ctx, op_tool_config_t *cfg);
+op_error_t op_command_replace(op_context_t *ctx, op_tool_config_t *cfg);
 op_error_t op_command_add_watch_variable(op_context_t *ctx, op_tool_config_t *cfg);
 op_error_t op_command_remove_watch_variable(op_context_t *ctx, op_tool_config_t *cfg);
 op_error_t op_hex_print_stream(const uint8_t *mem, const size_t length, FILE *stream);
-op_error_t op_command_hex_dump(op_context_t *ctx);
-op_error_t op_command_execute_n(op_context_t *ctx);
-op_error_t op_command_execute_until_return(op_context_t *ctx);
-op_error_t op_command_save_program(op_context_t *ctx);
-op_error_t op_command_save_memory(op_context_t *ctx);
-op_error_t op_command_load_program(op_context_t *ctx);
-op_error_t op_command_load_memory(op_context_t *ctx);
+op_error_t op_command_hex_dump(op_context_t *ctx, op_tool_config_t *cfg);
+op_error_t op_command_execute_n(op_context_t *ctx, op_tool_config_t *cfg);
+op_error_t op_command_execute_until_return(op_context_t *ctx, op_tool_config_t *cfg);
+op_error_t op_command_save_program(op_context_t *ctx, op_tool_config_t *cfg);
+op_error_t op_command_save_memory(op_context_t *ctx, op_tool_config_t *cfg);
+op_error_t op_command_load_program(op_context_t *ctx, op_tool_config_t *cfg);
+op_error_t op_command_load_memory(op_context_t *ctx, op_tool_config_t *cfg);
 char op_to_upper(const char c);
 op_error_t op_context_replace_instruction_memory(op_context_t *ctx, const uint16_t *data, const size_t length, const size_t address);
 
-op_error_t op_command_rewind_pc(op_context_t *ctx);
-op_error_t op_command_advance_pc(op_context_t *ctx);
-op_error_t op_command_test_instruction(op_context_t *ctx);
-op_error_t op_command_execute_no_store(op_context_t *ctx);
-op_error_t op_command_replace_and_step(op_context_t *ctx);
-op_error_t op_command_replace_and_advance(op_context_t *ctx);
-op_error_t op_command_print_help(op_context_t *ctx);
+op_error_t op_command_rewind_pc(op_context_t *ctx, op_tool_config_t *cfg);
+op_error_t op_command_advance_pc(op_context_t *ctx, op_tool_config_t *cfg);
+op_error_t op_command_test_instruction(op_context_t *ctx, op_tool_config_t *cfg);
+op_error_t op_command_execute_no_store(op_context_t *ctx, op_tool_config_t *cfg);
+op_error_t op_command_replace_and_step(op_context_t *ctx, op_tool_config_t *cfg);
+op_error_t op_command_replace_and_advance(op_context_t *ctx, op_tool_config_t *cfg);
+op_error_t op_command_print_help(op_context_t *ctx, op_tool_config_t *cfg);
+
+op_error_t op_repl_mnemonic_handler(op_context_t *ctx, op_tool_config_t *cfg);
+
+op_error_t op_command_print_instruction_set(op_context_t *ctx, op_tool_config_t *cfg);
+op_error_t op_command_step(op_context_t *ctx, op_tool_config_t *cfg);
+op_error_t op_command_master_print(op_context_t *ctx, op_tool_config_t *cfg);
+op_error_t op_command_clear(op_context_t *ctx, op_tool_config_t *cfg);
+op_error_t op_command_print_w(op_context_t *ctx, op_tool_config_t *cfg);
+op_error_t op_command_quit(op_context_t *ctx, op_tool_config_t *cfg);
+op_error_t op_command_reset_pc(op_context_t *ctx, op_tool_config_t *cfg);
+op_error_t op_command_show_address(op_context_t *ctx, op_tool_config_t *cfg);
+op_error_t op_command_show_opcode(op_context_t *ctx, op_tool_config_t *cfg);
+op_error_t op_command_show_description(op_context_t *ctx, op_tool_config_t *cfg);
+op_error_t op_command_unset_watchpoints(op_context_t *ctx, op_tool_config_t *cfg);
 
 #endif //LIB_OP_CODE_REPL_H

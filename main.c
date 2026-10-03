@@ -100,6 +100,7 @@ int main(const int argc, const char **argv){
   op_context_init(&ctx, instructions, 0x1000, callback_print, &config);
 
   op_tool_config_t cfg = {
+    .simulate = true,
     .print   = true,
     .print_w = true
   };
@@ -115,108 +116,53 @@ int main(const int argc, const char **argv){
   op_context_set_external(&ctx, &cfg);
 
   char c = 0;
-  bool simulate = true;
   printf("[Start simulation. Press H for help]\n>> ");
   
   do {
+    if(c == '\n'){
+        printf(">> ");
+    }
+    
     c = fgetc(stdin);
     c = op_to_upper(c);
 
-    switch(c){
-      case 'L':  for(int i = 0; i < OP_INSTRUCTION_SET_COUNT; i++){
-                     printf("\t%s, %s\n", op_instruction_set[i].name, op_instruction_set[i].description);
-                  }
-                  break;
-      case 'S':   op_context_step(&ctx);
-                  break;
-      case 'P':   cfg.print = !(cfg.print);
-                  printf("[Master print %s]\n", (cfg.print) ? "enabled" : "disabled" );
-                  break;
-      case 'K':   printf("\033[2J");
-                  break;
-      case 'W':   cfg.print_w = !(cfg.print_w);
-                  printf("[Print register W %s]\n", (cfg.print_w) ? "enabled" : "disabled" );
-                  break;
-      case 'Q':   printf("[End simulation]\n");
-                  simulate = false;
-                  break;
-      case 'R':   ctx.pc = 0;
-                  printf("[PC reset (set to 0)]\n");
-                  break;
-      case 'C':   ctx.enrichedConfig.showAddress = !(ctx.enrichedConfig.showAddress);
-                  printf("[Print PC %s]\n", (ctx.enrichedConfig.showAddress) ? "enabled" : "disabled" );
-                  break;
-      case 'V':   ctx.enrichedConfig.showValue = !(ctx.enrichedConfig.showValue);
-                  printf("[Print instruction value %s]\n", (ctx.enrichedConfig.showValue) ? "enabled" : "disabled" );
-                  break;
-      case 'F':   ctx.enrichedConfig.showDescription = !(ctx.enrichedConfig.showDescription);
-                  printf("[Print instruction description %s]\n", (ctx.enrichedConfig.showDescription) ? "enabled" : "disabled" );
-                  break;
-      case 'H':   code = op_command_print_help(&ctx);
-                  break;
-      case 'G':   code = op_command_goto(&ctx);
-                  printf(">> ");
-                  break;     
-      case 'M':   code = op_command_move(&ctx);
-                  printf(">> ");
-                  break;
-      case 'Z':   code = op_command_replace(&ctx);
-                  printf(">> ");
-                  break;
-      case 'I':   code = op_command_add_watch_variable(&ctx, &cfg);
-                  printf(">> ");
-                  break;
-      case 'O':   code = op_command_remove_watch_variable(&ctx, &cfg);
-                  printf(">> ");
-                  break;
-      case 'N':   code = op_command_hex_dump(&ctx);
-                  break;
-      case 'E':   code = op_command_execute_n(&ctx);
-                  printf(">> ");
-                  break;
-      case 'Y':   code = op_command_execute_until_return(&ctx);
-                  break;
-      case '1':   code = op_command_save_program(&ctx);
-                  printf(">> ");
-                  break;
-      case '2':   code = op_command_save_memory(&ctx);
-                  printf(">> ");
-                  break;
-      case '3':   code = op_command_load_program(&ctx);
-                  break;
-//      case '4':   code = op_command_load_memory(&ctx);
-//                  break;
-      case 'U':   for(size_t i = 0; i < OP_MAX_VARIABLE_COUNT; i++) cfg.variables[i].active = false;
-                  printf("[All watch variables disabled]\n");
-                  break;
-      case 'A':   code = op_command_rewind_pc(&ctx);
-                  break;
-      case 'D':   code = op_command_advance_pc(&ctx);
-                  break;
-      case 'T':   code = op_command_test_instruction(&ctx);
-                  break;
-      case 'X':   code = op_command_execute_no_store(&ctx);
-                  printf(">> ");
-                  break;
-      case 'B':   code = op_command_replace_and_step(&ctx);
-                  printf(">> ");
-                  break;
-      case 'J':   code = op_command_replace_and_advance(&ctx);
-                  printf(">> ");
-                  break;
-      case '\n':  printf(">> ");
-                  break;
-      case EOF:   printf("[End simulation]\n");
-                  simulate = false;
-                  break;
-      default: printf("Unknown command. Press H for help\n");
+    if(c == '!'){
+        code = op_repl_mnemonic_handler(&ctx, &cfg);
+        continue;        
+    } else if (c == EOF){
+        code = op_command_quit(&ctx, &cfg);        
+    }
+
+    bool found = false;
+    bool executed = false;
+    for(size_t i = 0; i < OP_REPL_MNEMONIC_COUNT; i++){
+        if(c != op_repl_mnemonics[i].shortcmd) continue;
+
+        found = true;
+        if(op_repl_mnemonics[i].func != NULL){
+            code = op_repl_mnemonics[i].func(&ctx, &cfg);
+            executed = true;
+        }
+        
+        if(op_repl_mnemonics[i].consumer){
+            printf(">> ");
+        }
+        break;
+    }
+
+    if(!found && c != '\n'){
+        printf("Unknown command. Press H for help\n");
+    }
+
+    if(found && (!executed)){
+        printf("Matching key found, but no callback found\nThis is likely a bug.\n");
     }
 
     if(code != OP_NO_ERROR){
         printf("[Error executing last instruction (code: %u)]\n", code);
     }
 
-  } while(simulate);
+  } while(cfg.simulate);
   
   (void) argc;
   (void) argv;
