@@ -221,7 +221,11 @@ op_error_t op_hex_print_stream(const uint8_t *mem, const size_t length, FILE *st
   fprintf(stream, "----------------------------------------------------------------------------\n");
 
   for(size_t i = 0; i < length; i++){
+#ifdef _WIN32
+    if((i % 0x10) == 0) fprintf(stream, "%08llX |", i);
+#else
     if((i % 0x10) == 0) fprintf(stream, "%08lX |", i);
+#endif
     fprintf(stream, " %02X", mem[i]);
     if((i % 0x10) == 0xF) fprintf(stream, " | \n");
   }
